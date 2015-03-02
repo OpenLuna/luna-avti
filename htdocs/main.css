@@ -1,0 +1,35 @@
+html, body {
+	margin: 0;
+	padding: 0;
+	font-family: Arial;
+}
+
+h1 {
+	text-align: center;
+}
+
+.commands {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.commands td[class="full"] {
+	border: 1px solid black;
+	border-radius: 3px;
+	background-color: #CDF;
+	width: 33.3%;
+	cursor: pointer;
+}
+
+.content {
+	background-color: #EEF;
+	width: 960px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#ajax-result {
+	border: 1px solid black;
+	border-radius: 3px;
+}
