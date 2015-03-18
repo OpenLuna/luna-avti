@@ -5,6 +5,7 @@ var UP = 73;
 var DOWN = 75;
 var ON = "ON";
 var OFF = "OFF";
+var commandCount = 0;
 
 //var URL = "http://193.2.176.139:80/car_srv.php";
 //var URL = "http://192.168.1.147:80/car_srv.php";
@@ -15,12 +16,14 @@ var send = function(message) {
 		url: URL,
 		data: {
 			command: message,
-			id: $("input[name=avtoID]:checked").val()
+			id: $("input[name=avtoID]:checked").val(),
+			time: commandCount
 		},
 		success: function(data) {
 			$("#ajax-result").text(data);
 		}
 	});
+	commandCount += 1;
 }
 
 var sendState = function() {
