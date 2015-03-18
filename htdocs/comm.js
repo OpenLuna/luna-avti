@@ -39,12 +39,14 @@ var sendState = function() {
 			right: right,
 			up: up,
 			down: down,
-			id: $("input[name=avtoID]:checked").val()
+			id: $("input[name=avtoID]:checked").val(),
+			time: commandCount
 		},
 		success: function(data) {
 			$("#ajax-result").text(data);
 		}
 	});
+	commandCount += 1;
 }
 
 var handledown = function(e) {
