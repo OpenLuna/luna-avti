@@ -1,0 +1,60 @@
+#ffmpeg -an -f video4linux2 -s 640x480 -i /dev/video0 -c:v h264 -an -pix_fmt yuv420p -r 60 -fpre cultra.ffpreset -tune zerolatency -f mpegts "udp://212.235.189.232:10000?pkt_size=1316"
+
+coder=0
+flags=-loop
+cmp=+chroma
+partitions=-parti8x8-parti4x4-partp8x8-partb8x8
+subq=0
+keyint_min=25
+sc_threshold=0
+i_qfactor=0.71
+b_strategy=0
+qcomp=0.6
+qmin=10
+qmax=51
+qdiff=4
+bf=0
+refs=1
+trellis=0
+wpredp=0
+
+# POPRAVLJENO 
+#spremenjena sintaksa ukazov za novejsi ffmpeg (default=direct_pred)
+direct-pred=1
+#(default=aq_mode)
+aq-mode=0
+#flags2 je deprecated -> vrednosti spremenjene v posamicne ukaze (vsi booleani [0,1], razen b-pyramid [none,strict,normal])
+#flags2=-bpyramid-mixed_refs-wpred-dct8x8+fastpskip-mbtree
+b-pyramid=none
+mixed-refs=0
+weightb=0
+8x8dct=0
+fast-pskip=1
+mbtree=0
+
+# SPREMENJENO
+#razmik med iframei (st. frameov med dvema iframeoma) (default=250)
+g=0
+#motion estimation (default=dia)
+me_method=zero
+# (default=16)
+me_range=0
+
+# DODANO
+#buffer size
+bufsize=0
+fflags=+nobuffer
+#real-time frames buffering
+rtbufsize=0
+#crf, qp = constant quality [0-51]; 0 = lossless, 20 = visually losless, 23 = default, 51 = worst; 20-28 = ok
+crf=23
+#qp=23
+# rate control lookahead (kao "warning/opomba" se pokaže da menda ne dela)
+#rc_lookahead=0
+
+
+
+
+# btw.
+# TUNE zerolatency opcije (niso veljavni ukazi v preset fajlu)
+#--bframes 0 --force-cfr --no-mbtree --sync-lookahead 0 --sliced-threads --rc-lookahead 0
