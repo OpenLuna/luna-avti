@@ -69,6 +69,8 @@ print "Advertising car to server (" + config["server ip"] + ")"
 if not network.sendGETRequest("/advertise.php", config):
     print "Error executing GET"
 
+print "Car is ready for driving!\n"
+
 while True:
     while not network.hasNetworkConnection():
         print "Lost network connection"
@@ -89,6 +91,7 @@ while True:
         continue
     
     if "time" in requests:
+        #print "Got time =", requests["time"]
         packetID = int(requests["time"])
         if packetID < lastPacketID:
             print "Got late packet with id " + str(packetID)
