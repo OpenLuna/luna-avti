@@ -57,7 +57,7 @@ if len(sys.argv) > 1: config = loadConfig(sys.argv[1])
 else: config = loadConfig()
 
 control = cc.Control()
-server = cn.Server()
+server = cn.Server(config)
 network = cn.NetworkConnection(config["server ip"])
 
 lastPacketID = -1
@@ -71,13 +71,20 @@ if not network.sendGETRequest("/advertise.php", config):
 
 print "Car is ready for driving!\n"
 
+#file for timing program execution
+logTimerFile = open("logs/program_timer.log", "a") #EXECUTION TIMING
+
 while True:
+    #EXECUTION TIMING - start
+    programTimerStart = time.time()
+    
     while not network.hasNetworkConnection():
         print "Lost network connection"
         control.stopMotors()
         time.sleep(2)
     
-    requests = server.receive()
+    #EXECUTION TIMING - config, logTimerFile
+    requests = server.receive(config, logTimerFile)
     
     #test if up, down, left, right appear in requests
     ok = True
@@ -99,3 +106,7 @@ while True:
         lastPacketID = packetID
     
     applyCommands(requests["up"], requests["down"], requests["left"], requests["right"])
+    
+    #EXECUTION TIMING - stop
+    logTimerFile.write(config["name"] + "," + requests["time"] + ",PI-all," + str(time.time() - programTimerStart) + "\n")
+    
