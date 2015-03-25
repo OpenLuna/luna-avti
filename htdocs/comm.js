@@ -10,7 +10,10 @@ var commandCount = 0;
 //var URL = "http://193.2.176.139:80/car_srv.php";
 //var URL = "http://192.168.1.147:80/car_srv.php";
 //var URL = "http://193.2.178.39:80/car_srv.php";
-var URL = "http://localhost:80/car_srv.php";
+//var URL = "http://localhost:80/car_srv.php";
+var URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
+//var naslov = document.URL.split("/")[2];
+
 
 var send = function(message) {
 	$.ajax({
