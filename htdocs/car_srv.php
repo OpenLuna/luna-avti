@@ -7,7 +7,7 @@ session_start();
 $cars = $_SESSION["cars"];
 
 //$request = "http://" . $cars[$_GET["id"]] . "/?command=" . $_GET["command"];
-$request = "http://" . $cars[$_GET["id"]]["ip"] .":".$cars[$_GET["id"]]["port"] . "/?up=" . $_GET["up"] . "&down=" . $_GET["down"] . "&left=" . $_GET["left"] . "&right=" . $_GET["right"] . "&time=" . $_GET["time"];
+$request = "http://" . trim($cars[$_GET["id"]]["ip"]) . ":". trim($cars[$_GET["id"]]["port"]) . "/?up=" . $_GET["up"] . "&down=" . $_GET["down"] . "&left=" . $_GET["left"] . "&right=" . $_GET["right"] . "&time=" . $_GET["time"];
 $output = file_get_contents($request);
 
 header("Access-Control-Allow-Origin: *");
