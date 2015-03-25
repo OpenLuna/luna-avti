@@ -41,7 +41,7 @@ var sendState = function() {
 			up: up,
 			down: down,
 			id: $( "#cars_list" ).val(),
-			time: commandCount
+			time: (new Date()).getTime()
 		},
 		success: function(data) {
 			$("#ajax-result").text(data);
