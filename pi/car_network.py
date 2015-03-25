@@ -14,8 +14,8 @@ class NetworkConnection:
         self.LOG_FILE_NAME = "log_" + dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
         self.MIN_PING_INTERVAL = minPingInterval
         
-        if not os.path.exists("log"):
-            os.makedirs("log")
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
         
         print "Server IP: " + self.IP
         print "Log file: " + self.LOG_FILE_NAME
@@ -25,7 +25,7 @@ class NetworkConnection:
     def ping(self):
         if time.time() - self.lastPing > self.MIN_PING_INTERVAL:
             self.lastPing = time.time()
-            response = os.system("ping -Dc1 " + self.IP + " | head -n2 | tail -n1 >> log/" + self.LOG_FILE_NAME)
+            response = os.system("ping -Dc1 " + self.IP + " | head -n2 | tail -n1 >> logs/" + self.LOG_FILE_NAME)
             if response != 0:
                 print "Unsuccessful ping request to " + self.IP
     
@@ -50,7 +50,7 @@ class NetworkConnection:
 class Server:
     HTML_HEADER = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"
     
-    def __init__(self, ip = None, port = 12345):
+    def __init__(self, config, ip = None, port = 12345):
         if not ip:
             while True:
                 self.IP = getLocalIP()
@@ -79,9 +79,11 @@ class Server:
     def __del__(self):
         self.serverSocket.close()
     
-    def receive(self):
+    def receive(self, config, lf):
         requests = {}
         try:
+            #EXECUTION TIMING - start
+            programTimerStart = time.time() 
             clientSocket, address = self.serverSocket.accept()
             
             """buff = []
@@ -99,10 +101,21 @@ class Server:
             data = "".join(buff)"""
             
             data = clientSocket.recv(1024)
+            #EXECUTION TIMING - stop
+            programTimerStop = time.time()
+            requests = getRequests(data)
+            lf.write(config["name"] + "," + requests["time"] + ",PI-receive," + str(programTimerStop - programTimerStart) + "\n")
+            
             requests = getRequests(data)
             
+            #EXECUTION TIMING - start
+            programTimerStart = time.time()
             clientSocket.sendall(self.HTML_HEADER)
             clientSocket.close()
+            #EXECUTION TIMING - stop
+            lf.write(config["name"] + "," + requests["time"] + ",PI-send," + str(time.time() - programTimerStart) + "\n")
+            
+            
         except socket.error:
             pass
         
