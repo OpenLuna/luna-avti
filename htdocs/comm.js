@@ -16,7 +16,7 @@ var send = function(message) {
 		url: URL,
 		data: {
 			command: message,
-			id: $("input[name=avtoID]:checked").val(),
+			id: $("car_list").val(),
 			time: commandCount
 		},
 		success: function(data) {
@@ -39,7 +39,7 @@ var sendState = function() {
 			right: right,
 			up: up,
 			down: down,
-			id: $("input[name=avtoID]:checked").val(),
+			id: $( "#cars_list" ).val(),
 			time: commandCount
 		},
 		success: function(data) {
