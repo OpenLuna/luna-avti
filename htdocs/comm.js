@@ -9,7 +9,8 @@ var commandCount = 0;
 
 //var URL = "http://193.2.176.139:80/car_srv.php";
 //var URL = "http://192.168.1.147:80/car_srv.php";
-var URL = "http://193.2.178.39:80/car_srv.php";
+//var URL = "http://193.2.178.39:80/car_srv.php";
+var URL = "http://localhost:80/car_srv.php";
 
 var send = function(message) {
 	$.ajax({
@@ -106,7 +107,7 @@ var handleup = function(e) {
 $(document).ready(function() {
 	// send event on click
 	$("td.full").click(function() {
-		send($(this).text())
+		sendState($(this).text())
 	});
 
 	// send event on keypress

@@ -49,7 +49,7 @@ session_start();
 			<?php
 				foreach($_SESSION["cars"] as $car){
 					if ($car["name"]){
-						echo "<option name=car_option value=".$car["id"].">".$car["name"]."</option>";
+						echo "<option name=car_option value=".$car["id"].">".trim($car["name"])."</option>";
 					}
 				}
 			?>
