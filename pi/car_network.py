@@ -104,18 +104,20 @@ class Server:
             #EXECUTION TIMING - stop
             programTimerStop = time.time()
             requests = getRequests(data)
-            lf.write(config["name"] + "," + requests["time"] + ",PI-receive," + str(programTimerStop - programTimerStart) + "\n")
             
-            requests = getRequests(data)
-            
-            #EXECUTION TIMING - start
-            programTimerStart = time.time()
-            clientSocket.sendall(self.HTML_HEADER)
-            clientSocket.close()
-            #EXECUTION TIMING - stop
-            lf.write(config["name"] + "," + requests["time"] + ",PI-send," + str(time.time() - programTimerStart) + "\n")
-            
-            
+            if "nd" in requests:
+                with open(lf.name, "r") as f:
+                    clientSocket.sendall(f.read())
+                    clientSocket.close()
+            else:
+                lf.write(config["name"] + "," + requests["time"] + ",PI-receive," + str(programTimerStop - programTimerStart) + "\n")
+                #EXECUTION TIMING - start
+                programTimerStart = time.time()
+                clientSocket.sendall(self.HTML_HEADER)
+                
+                clientSocket.close()
+                #EXECUTION TIMING - stop
+                lf.write(config["name"] + "," + requests["time"] + ",PI-send," + str(time.time() - programTimerStart) + "\n")     
         except socket.error:
             pass
         
@@ -138,7 +140,7 @@ def getLocalIP():
 #TODO handle errors
 def getRequests(html):
     #GET request in form /xxx?a1=d1&a2=d2...
-    requests = {}
+    requests = {"time": "-1"} #EXECUTION TIMING
     #print "HTML\n", html
     try:
         s = html.split("\n")[0].split()[1]
