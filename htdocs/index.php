@@ -55,6 +55,7 @@ session_start();
 			?>
 		</select>
 	</div>
+	<button id = "nd" type="button">Show network diagnostics</button>
 
 	<div style="width:640px;margin:auto">
 		<p id = "container1">Please install the Flash Plugin</p>

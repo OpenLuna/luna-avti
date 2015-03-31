@@ -5,15 +5,22 @@ var UP = 73; //i
 var DOWN = 75; //k
 var ON = "ON";
 var OFF = "OFF";
-var commandCount = 0;
-
 var URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
+
+var timerLog = [];
+
+function buttonClick(){
+	console.log(timerLog);
+	
+}
 
 var sendState = function() {
 	var left = (keysdown[LEFT] === true) ? ON : OFF;
 	var right = (keysdown[RIGHT] === true) ? ON : OFF;
 	var up = (keysdown[UP] === true) ? ON : OFF;
 	var down = (keysdown[DOWN] === true) ? ON : OFF;
+	
+	var timestamp = (new Date()).getTime();
 	
 	$.ajax({
 		url: URL,
@@ -23,17 +30,18 @@ var sendState = function() {
 			up: up,
 			down: down,
 			id: $( "#cars_list" ).val(),
-			time: (new Date()).getTime()
+			time: timestamp
 		},
 		success: function(data) {
-			$("#ajax-result").text(data);
+			$( "#ajax-result" ).text(data);
+			var r = $( "#cars_list option:selected" ).text() + "," + timestamp + ",client," + (((new Date()).getTime() - timestamp) / 1000);
+			timerLog.push(r);
 		}
 	});
-	commandCount += 1;
 }
 
 var handledown = function(e) {
-	console.log(e);
+	//console.log(e);
 	if (keysdown[e.which] ==  false || (typeof keysdown[e.which] === "undefined")) {
 		keysdown[e.which] = true;
 		switch (e.which) {
@@ -58,7 +66,7 @@ var handledown = function(e) {
 }
 
 var handleup = function(e) {
-	console.log(e);
+	//console.log(e);
 	keysdown[e.which] = false;
 	switch (e.which) {
 		case UP:
@@ -83,4 +91,5 @@ var handleup = function(e) {
 $(document).ready(function() {
 	// send event on keypress
 	$(window).keydown(handledown).keyup(handleup);
+	$("button#nd").click(buttonClick);
 });
