@@ -107,6 +107,7 @@ class Server:
             
             if "nd" in requests:
                 with open(lf.name, "r") as f:
+                    clientSocket.sendall(self.HTML_HEADER)
                     clientSocket.sendall(f.read())
                     clientSocket.close()
             else:
