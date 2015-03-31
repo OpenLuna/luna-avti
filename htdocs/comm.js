@@ -1,34 +1,13 @@
 var keysdown = {};
-var LEFT = 74;
-var RIGHT = 76;
-var UP = 73;
-var DOWN = 75;
+var LEFT = 74; //j
+var RIGHT = 76; //l
+var UP = 73; //i
+var DOWN = 75; //k
 var ON = "ON";
 var OFF = "OFF";
 var commandCount = 0;
 
-//var URL = "http://193.2.176.139:80/car_srv.php";
-//var URL = "http://192.168.1.147:80/car_srv.php";
-//var URL = "http://193.2.178.39:80/car_srv.php";
-//var URL = "http://localhost:80/car_srv.php";
 var URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
-//var naslov = document.URL.split("/")[2];
-
-
-var send = function(message) {
-	$.ajax({
-		url: URL,
-		data: {
-			command: message,
-			id: $("car_list").val(),
-			time: commandCount
-		},
-		success: function(data) {
-			$("#ajax-result").text(data);
-		}
-	});
-	commandCount += 1;
-}
 
 var sendState = function() {
 	var left = (keysdown[LEFT] === true) ? ON : OFF;
@@ -54,65 +33,54 @@ var sendState = function() {
 }
 
 var handledown = function(e) {
+	console.log(e);
 	if (keysdown[e.which] ==  false || (typeof keysdown[e.which] === "undefined")) {
 		keysdown[e.which] = true;
 		switch (e.which) {
-			case 73: // i
+			case UP:
+				sendState();
 				$("#buttonUp").css({backgroundColor: "green"});
-				//send("UP");
-				sendState();
 				break;
-			case 74: // j
+			case LEFT:
+				sendState();
 				$("#buttonLeft").css({backgroundColor: "green"});
-				//send("LEFT");
-				sendState();
 				break;
-			case 75: // k
+			case DOWN:
+				sendState();
 				$("#buttonDown").css({backgroundColor: "green"});
-				//send("DOWN");
-				sendState();
 				break;
-			case 76: // l
-				$("#buttonRight").css({backgroundColor: "green"});
-				//send("RIGHT");
+			case RIGHT:
 				sendState();
+				$("#buttonRight").css({backgroundColor: "green"});
 				break;
 		}
 	}
 }
 
 var handleup = function(e) {
+	console.log(e);
 	keysdown[e.which] = false;
 	switch (e.which) {
-		case 73: // i
+		case UP:
+			sendState();
 			$("#buttonUp").css({backgroundColor: "lightblue"});
-			//send("UP");
-			sendState();
 			break;
-		case 74: // j
+		case LEFT:
+			sendState();
 			$("#buttonLeft").css({backgroundColor: "lightblue"});
-			//send("LEFT");
-			sendState();
 			break;
-		case 75: // k
+		case DOWN:
+			sendState();
 			$("#buttonDown").css({backgroundColor: "lightblue"});
-			//send("DOWN");
-			sendState();
 			break;
-		case 76: // l
-			$("#buttonRight").css({backgroundColor: "lightblue"});
-			//send("RIGHT");
+		case RIGHT:
 			sendState();
+			$("#buttonRight").css({backgroundColor: "lightblue"});
 			break;
 	}
 }
 
 $(document).ready(function() {
-	// send event on click
-	$("td.full").click(function() {
-		sendState($(this).text())
-	});
-
 	// send event on keypress
 	$(window).keydown(handledown).keyup(handleup);
 });
