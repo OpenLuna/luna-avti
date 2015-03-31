@@ -1,5 +1,7 @@
 <?php
 //ip/?nb=true
+session_start();
+$cars = $_SESSION["cars"];
 $phpLog = array();
 $handle = fopen("logs/log".$_POST["id"].".csv", "r");
 while (($data = fgetcsv($handle)) !== FALSE){
@@ -9,13 +11,15 @@ while (($data = fgetcsv($handle)) !== FALSE){
 	}	
 	$phpLog[] = $tmp;
 }
-/*
-session_start();
-$start_time = microtime(true);
-$cars = $_SESSION["cars"];
-$request = "http://" . trim($cars[$_POST["id"]]["ip"]) . ":". trim($cars[$_GET["id"]]["port"]) . "/?nd=true";
+
+$request = "http://" . trim($cars[$_POST["id"]]["ip"]) . ":". trim($cars[$_POST["id"]]["port"]) . "/?nd=true";
 $output = file_get_contents($request);
-echo $_POST['id'];
+//treba je narest explode pa dat v tabelo
+//echo $_POST['id'];
 echo $_POST['data'];
+
+/*
+* damo vse v isto tabelo, sortiramo po time
 */
+
 ?>
