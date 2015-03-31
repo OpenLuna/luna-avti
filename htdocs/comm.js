@@ -11,7 +11,9 @@ var timerLog = [];
 
 function buttonClick(){
 	console.log(timerLog);
-	
+	$.redirect(	"http://" + document.URL.split("/")[2] + '/nd.php', 
+			{id: $( "#cars_list" ).val(), 
+			data: JSON.stringify(timerLog)});
 }
 
 var sendState = function() {

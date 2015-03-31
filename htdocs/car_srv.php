@@ -12,7 +12,7 @@ if($ex_time < 0){
 	fwrite($file, $start_time . " " . microtime() . "\n");
 	fclose($file);
 }
-$file = fopen("logs/log.csv", "a");
+$file = fopen("logs/log".$_GET["id"]].".csv", "a");
 $data = array(trim($cars[$_GET["id"]]["name"]), $_GET["time"], "PHP", $ex_time);
 echo fputcsv($file, $data);
 fclose($file);

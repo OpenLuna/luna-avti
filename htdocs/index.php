@@ -8,6 +8,7 @@ session_start();
 	<title>Communication test</title>
 	<link rel="stylesheet" type="text/css" href="main.css"/>
 	<script src="jquery-2.1.3.min.js"></script>
+	<script src="jquery.redirect.js"></script>
 	<script src="comm.js"></script>
 	<script src="http://jwpsrv.com/library/udi9iLWzEeSQBgp+lcGdIw.js"></script>
 </head>
