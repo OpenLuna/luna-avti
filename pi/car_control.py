@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO
+import time
 
 class Control:
     """constants for easy reading DO NOT TOUCH"""
@@ -27,6 +28,8 @@ class Control:
     INPUT_3 = 13
     INPUT_4 = 11
     
+    LED_GREEN = 33
+    LED_RED = 37
     """
     Internal state of the car
     steerState: -1 left, 0 stop, 1 right
@@ -35,16 +38,41 @@ class Control:
     driveState = 0
     steerState = 0
     
+    timeGreenLED = 0
+    timeRedLED = 0
 
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup((self.ENABLE_A, self.INPUT_1, self.INPUT_2), GPIO.OUT)
         GPIO.setup((self.ENABLE_B, self.INPUT_3, self.INPUT_4), GPIO.OUT)
+        GPIO.setup((self.LED_GREEN, self.LED_RED), GPIO.OUT)
         GPIO.output(self.ENABLE_A, GPIO.LOW)
         GPIO.output(self.ENABLE_B, GPIO.LOW)
 
     def __del__(self):
+        GPIO.output((self.ENABLE_A, self.INPUT_1, self.INPUT_2), GPIO.LOW)
+        GPIO.output((self.ENABLE_B, self.INPUT_3, self.INPUT_4), GPIO.LOW)
+        GPIO.output((self.LED_GREEN, self.LED_RED), GPIO.LOW)
         GPIO.cleanup()
+    
+    #zasveti z ledico za timeOn sekund
+    def LED(self, color, timeOn = -1):
+        if timeOn != -1:
+            if color == "green":
+                if timeOn != 0:
+                    self.timeGreenLED = time.time() + timeOn
+                GPIO.output(self.LED_GREEN, GPIO.HIGH)
+            else:
+                if timeOn != 0:
+                    self.timeRedLED = time.time() + timeOn
+                GPIO.output(self.LED_RED, GPIO.HIGH)
+        else:
+            if self.timeGreenLED != 0 and self.timeGreenLED < time.time():
+                GPIO.output(self.LED_GREEN, GPIO.LOW)
+                self.timeGreenLED = 0
+            if self.timeRedLED != 0 and self.timeRedLED < time.time():
+                GPIO.output(self.LED_RED, GPIO.LOW)
+                self.timeRedLED = 0
     
     def drive(self, cmd):
         if cmd == self.DRIVE_STOP:

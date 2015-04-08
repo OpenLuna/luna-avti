@@ -57,7 +57,7 @@ if len(sys.argv) > 1: config = loadConfig(sys.argv[1])
 else: config = loadConfig()
 
 control = cc.Control()
-server = cn.Server(config)
+server = cn.Server(config, "127.0.0.1")
 network = cn.NetworkConnection(config["server ip"])
 
 lastPacketID = -1
@@ -65,23 +65,30 @@ lastPacketID = -1
 config["car ip"] = server.IP
 config["port"] = server.PORT
 
-print "Advertising car to server (" + config["server ip"] + ")"
-if not network.sendGETRequest("/advertise.php", config):
-    print "Error executing GET"
+#print "Advertising car to server (" + config["server ip"] + ")"
+#if not network.sendGETRequest("/advertise.php", config):
+#    print "Error executing GET"
 
 print "Car is ready for driving!\n"
 
 #file for timing program execution
 logTimerFile = open("logs/program_timer.log", "a") #EXECUTION TIMING
 
+control.LED("green", 0)
+control.LED("red", 0)
+
 while True:
     #EXECUTION TIMING - start
     programTimerStart = time.time()
     
-    while not network.hasNetworkConnection():
-        print "Lost network connection"
-        control.stopMotors()
-        time.sleep(2)
+    #while not network.hasNetworkConnection():
+    #    print "Lost network connection"
+    #    control.stopMotors()
+    #    control.LED("red", 1)
+    #    time.sleep(2)
+    
+    control.LED("green")
+    control.LED("red")
     
     #EXECUTION TIMING - config, logTimerFile
     requests = server.receive(config, logTimerFile)
@@ -105,7 +112,7 @@ while True:
             continue
         lastPacketID = packetID
     
-    applyCommands(requests["up"], requests["down"], requests["left"], requests["right"])
+    applyCommands(requests["up"], requests["down"], requests["left"], requests["right"]) 
     
     #EXECUTION TIMING - stop
     logTimerFile.write(config["name"] + "," + requests["time"] + ",PI-all," + str(time.time() - programTimerStart) + "\n")
