@@ -2,8 +2,8 @@
 session_start();
 $start_time = microtime(true);
 $cars = $_SESSION["cars"];
-$request = "http://" . trim($cars[$_GET["id"]]["ip"]) . ":". trim($cars[$_GET["id"]]["port"]) . "/?up=" . $_GET["up"] . "&down=" . $_GET["down"] . "&left=" . $_GET["left"] . "&right=" . $_GET["right"] . "&time=" . $_GET["time"];
-$output = file_get_contents($request);
+//$request = "http://" . trim($cars[$_GET["id"]]["ip"]) . ":". trim($cars[$_GET["id"]]["port"]) . "/?up=" . $_GET["up"] . "&down=" . $_GET["down"] . "&left=" . $_GET["left"] . "&right=" . $_GET["right"] . "&time=" . $_GET["time"];
+//$output = file_get_contents($request);
 
 header("Access-Control-Allow-Origin: *");
 $ex_time = microtime(true) - $start_time;
