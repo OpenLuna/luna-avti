@@ -32,7 +32,6 @@ curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 2);
 curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, 1);
 $output = curl_exec($curl_handle);
 curl_close($curl_handle);
-
 $piLog = array();
 foreach (explode("\n", $output) as $line){
 	$piLog[] = explode(",", $line);

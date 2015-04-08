@@ -20,6 +20,7 @@ if($ex_time < 0){
 }
 $file = fopen("logs/log".$_GET["id"].".csv", "a");
 $data = array(trim($cars[$_GET["id"]]["name"]), $_GET["time"], "PHP", $ex_time);
+fputcsv($file, $data);
 fclose($file);
 echo "OK";
 ?>
