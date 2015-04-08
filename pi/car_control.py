@@ -56,6 +56,7 @@ class Control:
         GPIO.cleanup()
     
     #zasveti z ledico za timeOn sekund
+    #timeOne = 0 sveti za zmeraj
     def LED(self, color, timeOn = -1):
         if timeOn != -1:
             if color == "green":
