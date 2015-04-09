@@ -1,6 +1,3 @@
-<?php 
-session_start();
-?>
 <!DOCTYPE html>
 
 <html>
@@ -15,8 +12,6 @@ session_start();
 <body>
 <?php
 		$all_cars = scandir("cars/");
-		//zapisi vse avtomobile v session
-		//echo explode(".", $all_cars[2])[0]
 		$cars = array();
 		$id_co = 0;
 		foreach ($all_cars as $car) {
@@ -36,8 +31,6 @@ session_start();
 			$cars[$id_co] = $tmp_car;
 			$id_co += 1;
 		}
-		$_SESSION["cars"] = $cars;
-		
 ?>
 <div class="content">
 	<h1>Communication example</h1>
@@ -48,7 +41,7 @@ session_start();
 		<select id="cars_list">
 			<!-- nekako: <option> Avto </option> -->
 			<?php
-				foreach($_SESSION["cars"] as $car){
+				foreach($cars as $car){
 					if ($car["name"]){
 						echo "<option name=car_option value=".$car["id"].">".trim($car["name"])."</option>";
 					}
