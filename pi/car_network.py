@@ -74,7 +74,7 @@ class Server:
                 print
                 break
         self.serverSocket.setblocking(False)
-        self.serverSocket.listen(3)
+        self.serverSocket.listen(20)
     
     def __del__(self):
         self.serverSocket.close()
@@ -115,7 +115,8 @@ class Server:
                 lf.write(config["name"] + "," + requests["time"] + ",PI-receive," + str(programTimerStop - programTimerStart) + "\n")
                 #EXECUTION TIMING - start
                 programTimerStart = time.time()
-                clientSocket.sendall(self.HTML_HEADER)
+                clientSocket.sendall(self.HTML_HEADER + "OKK\n")
+                #clientSocket.shutdown(socket.SHUT_RDWR)
                 clientSocket.close()
 
                 #EXECUTION TIMING - stop
@@ -134,7 +135,7 @@ def getLocalIP():
     if ip.startswith("127."):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            ip = socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack("256s", "eth0"))[20:24])
+            ip = socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack("256s", "wlan0"))[20:24])
         except IOError:
             ip = ""
     return ip

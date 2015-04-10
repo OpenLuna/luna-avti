@@ -2,6 +2,7 @@ import car_control as cc
 import car_network as cn
 import time
 import sys
+import os
 
 def applyCommands(up, down, left, right):
     print "Got state UP:", up, "DOWN:", down, "LEFT:", left, "RIGHT:", right
@@ -53,6 +54,8 @@ def loadConfig(fileName = "car.config"):
     return config    
 
 #main
+print "Niceness", os.nice(-15)
+
 if len(sys.argv) > 1: config = loadConfig(sys.argv[1])
 else: config = loadConfig()
 
@@ -120,4 +123,4 @@ while True:
     
     #EXECUTION TIMING - stop
     logTimerFile.write(config["name"] + "," + requests["time"] + ",PI-all," + str(time.time() - programTimerStart) + "\n")
-    
+    #logTimerFile.flush()
