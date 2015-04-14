@@ -48,7 +48,7 @@ class NetworkConnection:
 
 #TODO time analysis
 class Server:
-    HTML_HEADER = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"
+    HTML_HEADER = "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: * \nContent-Type: text/html\n\n"
     
     def __init__(self, config, ip = None, port = 12345):
         if not ip:
