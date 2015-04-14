@@ -4,6 +4,8 @@ import time
 import sys
 import os
 
+#TEST
+
 def applyCommands(up, down, left, right):
     print "Got state UP:", up, "DOWN:", down, "LEFT:", left, "RIGHT:", right
     
