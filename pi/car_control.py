@@ -37,9 +37,6 @@ class Control:
     """
     driveState = 0
     steerState = 0
-    
-    timeGreenLED = 0
-    timeRedLED = 0
 
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)
@@ -57,23 +54,11 @@ class Control:
     
     #zasveti z ledico za timeOn sekund
     #timeOne = 0 sveti za zmeraj
-    def LED(self, color, timeOn = -1):
-        if timeOn != -1:
-            if color == "green":
-                if timeOn != 0:
-                    self.timeGreenLED = time.time() + timeOn
-                GPIO.output(self.LED_GREEN, GPIO.HIGH)
-            else:
-                if timeOn != 0:
-                    self.timeRedLED = time.time() + timeOn
-                GPIO.output(self.LED_RED, GPIO.HIGH)
+    def LED(self, color, state):
+        if color == "green":
+            GPIO.output(self.LED_GREEN, GPIO.HIGH if state else GPIO.LOW)   
         else:
-            if self.timeGreenLED != 0 and self.timeGreenLED < time.time():
-                GPIO.output(self.LED_GREEN, GPIO.LOW)
-                self.timeGreenLED = 0
-            if self.timeRedLED != 0 and self.timeRedLED < time.time():
-                GPIO.output(self.LED_RED, GPIO.LOW)
-                self.timeRedLED = 0
+            GPIO.output(self.LED_RED, GPIO.HIGH if state else GPIO.LOW)
     
     def drive(self, cmd):
         if cmd == self.DRIVE_STOP:

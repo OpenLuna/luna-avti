@@ -4,7 +4,9 @@ import time
 import sys
 import os
 
-#TEST
+from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory
+from twisted.python import log
+from twisted.internet import reactor
 
 def applyCommands(up, down, left, right):
     print "Got state UP:", up, "DOWN:", down, "LEFT:", left, "RIGHT:", right
@@ -49,37 +51,64 @@ def loadConfig(fileName = "car.config"):
                 print "Error reading config: line " + str(lineNo)
                 continue
             config[key] = value
-    print "Read config file with:"
+    print "Config file:"
     for k in config:
         print "\t" + k + ": " + config[k]
     print
-    return config    
+    return config
 
 #main
-print "Niceness", os.nice(-15)
+#print "Niceness", os.nice(-15)
 
 if len(sys.argv) > 1: config = loadConfig(sys.argv[1])
 else: config = loadConfig()
 
 control = cc.Control()
-server = cn.Server(config)
 network = cn.NetworkConnection(config["server ip"])
 
 lastPacketID = -1
+IP = ""
+PORT = 12345
 
-config["car ip"] = server.IP
-config["port"] = server.PORT
+while True:
+    IP = getLocalIP()
+    if IP: break
+    print "Error getting local IP: check network connection"
+    time.sleep(2)
+    
+config["car ip"] = IP
+config["port"] = PORT
 
 print "Advertising car to server (" + config["server ip"] + ")"
-if not network.sendGETRequest("/advertise.php", config):
+while not network.sendGETRequest("/advertise.php", config):
     print "Error executing GET"
-
-print "Car is ready for driving!\n"
+    time.sleep(2)
 
 #file for timing program execution
 logTimerFile = open("logs/program_timer.log", "a") #EXECUTION TIMING
 
-control.LED("green", 0)
+class WebsocketServer(WebSocketServerProtocol):
+    def onConnect(self, request):
+        print "Connected", request
+    def onOpen(self):
+        print "websocket connection open"
+    def onMessage(self, payload, isBinary):
+        print payload
+    def onClose(self, wasClean, code, reason):
+        print "websocket closed"
+
+
+log.startLogging(sys.stdout)
+
+factory = WebSocketServerFactory("ws://" + IP + ":" + PORT, debug = False)
+factory.protocol = WebsocketServer
+
+reactor.listenTCP(9000, factory)
+
+control.LED("green", True)
+print "Car is ready for driving!\n"
+
+reactor.run()
 
 while True:
     #EXECUTION TIMING - start
@@ -88,14 +117,10 @@ while True:
     while not network.hasNetworkConnection():
         print "Lost network connection"
         control.stopMotors()
-        control.LED("red", 0.5)
+        control.LED("red", True)
         time.sleep(1)
-        control.LED("red");
+        control.LED("red", False);
         time.sleep(1)
-    
-    #run timers
-    control.LED("green")
-    control.LED("red")
     
     #EXECUTION TIMING - config, logTimerFile
     requests = server.receive(config, logTimerFile)
@@ -111,15 +136,13 @@ while True:
             print "Got invalid commands"
         continue
     
-    if "time" in requests:
-        #print "Got time =", requests["time"]
-        packetID = int(requests["time"])
-        if packetID < lastPacketID:
-            print "Got late packet with id " + str(packetID)
-            #EXECUTION TIMING - stop
-            logTimerFile.write(config["name"] + "," + requests["time"] + ",PI-all," + str(time.time() - programTimerStart) + "\n")
-            continue
-        lastPacketID = packetID
+    packetID = int(requests["time"])
+    if packetID < lastPacketID:
+        print "Got late packet with id " + str(packetID)
+        #EXECUTION TIMING - stop
+        logTimerFile.write(config["name"] + "," + requests["time"] + ",PI-all," + str(time.time() - programTimerStart) + "\n")
+        continue
+    lastPacketID = packetID
     
     applyCommands(requests["up"], requests["down"], requests["left"], requests["right"]) 
     

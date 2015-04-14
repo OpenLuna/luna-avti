@@ -6,31 +6,22 @@ import datetime as dt
 import time
 
 class NetworkConnection:
-    lastPing = 0
     lastConnectionCheck = 0
     
-    def __init__(self, ip, minPingInterval = 1):
-        self.IP = ip #car server ip
-        self.LOG_FILE_NAME = "log_" + dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
-        self.MIN_PING_INTERVAL = minPingInterval
+    def __init__(self, ip, minCheckInterval = 1):
+        self.IP = ip #Global server IP
+        self.MIN_CHECK_INTERVAL = minCheckInterval
+        #self.LOG_FILE_NAME = "log_" + dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
         
         if not os.path.exists("logs"):
             os.makedirs("logs")
         
         print "Server IP: " + self.IP
-        print "Log file: " + self.LOG_FILE_NAME
-        print "Minimum req interval: " + str(self.MIN_PING_INTERVAL)
+        print "Minimum check interval: " + str(self.MIN_CHECK_INTERVAL)
         print
-        
-    def ping(self):
-        if time.time() - self.lastPing > self.MIN_PING_INTERVAL:
-            self.lastPing = time.time()
-            response = os.system("ping -Dc1 " + self.IP + " | head -n2 | tail -n1 >> logs/" + self.LOG_FILE_NAME)
-            if response != 0:
-                print "Unsuccessful ping request to " + self.IP
     
     def hasNetworkConnection(self):
-        if time.time() - self.lastConnectionCheck > self.MIN_PING_INTERVAL:
+        if time.time() - self.lastConnectionCheck > self.MIN_CHECK_INTERVAL:
             self.lastConnectionCheck = time.time()
             if getLocalIP(): return True
             else: return False
@@ -39,16 +30,14 @@ class NetworkConnection:
     def sendGETRequest(self, path, params):
         connection = httplib.HTTPConnection(self.IP)
         request = path + "?" + urllib.urlencode(params)
-        #print "Sending GET request to " + self.IP + ": " + request
         connection.request("GET", request)
         response = connection.getresponse()
         print response.read()
         print
         return response.status == 200
 
-#TODO time analysis
 class Server:
-    HTML_HEADER = "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: * \nContent-Type: text/html\n\n"
+    HTML_HEADER = "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nContent-Type: text/html\n\n"
     
     def __init__(self, config, ip = None, port = 12345):
         if not ip:
@@ -85,20 +74,6 @@ class Server:
             #EXECUTION TIMING - start
             programTimerStart = time.time() 
             clientSocket, address = self.serverSocket.accept()
-            
-            """buff = []
-            clientSocket.setBlocking(True)
-            while True:
-                try:
-                    time.sleep(1)
-                    data = clientSocket.recv(1024)
-                    print "data:", data
-                    buff.append(data)
-                except socket.error:
-                    print "here"
-                    break
-                
-            data = "".join(buff)"""
             
             data = clientSocket.recv(1024)
             #EXECUTION TIMING - stop
