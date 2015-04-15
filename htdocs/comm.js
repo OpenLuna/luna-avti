@@ -31,7 +31,7 @@ function wsConnect(){
 	}
 }
 
-var sendState = function() {
+function sendState(){
 	if(websocket == null) return;
 	
 	var left = (keysdown[LEFT] === true) ? ON : OFF;
@@ -44,55 +44,15 @@ var sendState = function() {
 	websocket.send(cmd);
 }
 
-var handledown = function(e) {
-	//console.log(e);
-	if (keysdown[e.which] ==  false || (typeof keysdown[e.which] === "undefined")) {
-		keysdown[e.which] = true;
-		switch (e.which) {
-			case UP:
-				sendState();
-				$("#buttonUp").css({backgroundColor: "green"});
-				break;
-			case LEFT:
-				sendState();
-				$("#buttonLeft").css({backgroundColor: "green"});
-				break;
-			case DOWN:
-				sendState();
-				$("#buttonDown").css({backgroundColor: "green"});
-				break;
-			case RIGHT:
-				sendState();
-				$("#buttonRight").css({backgroundColor: "green"});
-				break;
-		}
-	}
-}
-
-var handleup = function(e) {
-	//console.log(e);
-	keysdown[e.which] = false;
-	switch (e.which) {
-		case UP:
-			sendState();
-			$("#buttonUp").css({backgroundColor: "lightblue"});
-			break;
-		case LEFT:
-			sendState();
-			$("#buttonLeft").css({backgroundColor: "lightblue"});
-			break;
-		case DOWN:
-			sendState();
-			$("#buttonDown").css({backgroundColor: "lightblue"});
-			break;
-		case RIGHT:
-			sendState();
-			$("#buttonRight").css({backgroundColor: "lightblue"});
-			break;
-	}
+function keypressHandle(e){
+	if(e.type == "keydown") keysdown[e.keyCode] = true;
+	else if(e.type == "keyup") keysdown[e.keyCode] = false;
+	else console.error(e);
+	
+	sendState();
 }
 
 $(document).ready(function() {
-	$(window).keydown(handledown).keyup(handleup);
+	$(window).keydown(keypressHandle).keyup(keypressHandle);
 	$("button#wsconnect").click(wsConnect);
 });
