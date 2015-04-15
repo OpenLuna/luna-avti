@@ -2,10 +2,8 @@ import car_control as cc
 import car_network as cn
 import time
 import sys
-import os
 
 from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory
-from twisted.python import log
 from twisted.internet import reactor
 from twisted.internet import task
 
@@ -73,15 +71,10 @@ class WebsocketServer(WebSocketServerProtocol):
             r = r.split("=")
             requests[r[0].lower()] = r[1].lower()
         
-        ok = True
         for r in ["up", "down", "left", "right"]:
             if r not in requests:
-                ok = False
-                break
-        if not ok:
-            if requests != {}:
                 print "Got invalid commands"
-            return
+                return
         
         packetID = int(requests["time"])
         if packetID < self.lastPacketID:
@@ -89,19 +82,19 @@ class WebsocketServer(WebSocketServerProtocol):
             return
         self.lastPacketID = packetID
         applyCommands(requests["up"], requests["down"], requests["left"], requests["right"])
+        self.sendMessage(requests["time"], False)
         
     def onClose(self, wasClean, code, reason):
         print "Connection CLOSED"
 
 
-#****MAIN****
-#print "Niceness", os.nice(-15)
+#****MAIN****#
 
 IP = ""
 PORT = 12345
 
 #read default config file (car.config) or the one provided
-#as pgrogram argument
+#as program argument
 if len(sys.argv) > 1: config = loadConfig(sys.argv[1])
 else: config = loadConfig()
 
@@ -128,8 +121,6 @@ print "Advertising car to server (" + config["server ip"] + ")"
 while not cn.sendGETRequest(config["server ip"], "/advertise.php", config):
     print "Error executing GET"
     time.sleep(2)
-
-#log.startLogging(sys.stdout)
 
 websocketURI = "ws://" + str(IP) + ":" + str(PORT)
 print "Openning websocket at", websocketURI
