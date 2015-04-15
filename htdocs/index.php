@@ -1,35 +1,35 @@
 <!DOCTYPE html>
 
 <?php
-	$all_cars = scandir("cars/");
-	$cars = array();
-	$id_co = 0;
-	foreach ($all_cars as $car) {
-		$tmp_car = array();
-		$tmp = explode(".", $car)[0];
-		if (strcmp($tmp, "") !== 0){
-			$fajl = fopen("cars/".$car, "r");
-			if($fajl){
-				while (($line = fgets($fajl)) !== false ){
-					$tmp1 = explode(":", $line);
-					$tmp_car[trim($tmp1[0])] = trim($tmp1[1]);
-				}
-				$tmp_car["id"] = $id_co;
+$all_cars = scandir("cars/");
+$cars = array();
+$id_co = 0;
+foreach ($all_cars as $car) {
+	$tmp_car = array();
+	$tmp = explode(".", $car)[0];
+	if (strcmp($tmp, "") !== 0){
+		$fajl = fopen("cars/".$car, "r");
+		if($fajl){
+			while (($line = fgets($fajl)) !== false ){
+				$tmp1 = explode(":", $line);
+				$tmp_car[trim($tmp1[0])] = trim($tmp1[1]);
 			}
-			fclose($fajl);
+			$tmp_car["id"] = $id_co;
 		}
+		fclose($fajl);
 		$cars[$id_co] = $tmp_car;
 		$id_co += 1;
 	}
+}
 ?>
 
 <html>
 <head>
 	<title>Communication test</title>
 	<link rel="stylesheet" type="text/css" href="main.css"/>
-	<script src="comm.js"></script>
 	<script src="//cdn.jsdelivr.net/jquery/2.1.3/jquery.min.js"></script>
 	<script src="http://jwpsrv.com/library/udi9iLWzEeSQBgp+lcGdIw.js"></script>
+	<script src="comm.js"></script>
 </head>
 
 <body>
@@ -40,25 +40,23 @@
 		Avto:
 		<select id="cars_list">
 			<?php
-				foreach($cars as $car){
-					if ($car["name"]){
-						echo "<option name=car_option value=".$car["id"].">".trim($car["name"])."</option>";
-					}
-				}
+			foreach($cars as $car){
+				echo "<option name=car_option value=".$car["ip"].":".$car["port"].">".trim($car["name"])."</option>";
+			}
 			?>
 		</select>
 	</div>
-	<button id = "nd" type="button">Show network diagnostics</button>
+	<button id = "wsconnect" type="button">Connect</button>
 
-	<div style="width:640px;margin:auto">
+	<div style="width:400px;margin:auto">
 		<p id = "container1">Please install the Flash Plugin</p>
 	</div>
 	
 	<script type = "text/javascript">
 		jwplayer("container1").setup({
 			file: "rtmp://212.235.189.232/flvplayback/ts_2_0_256",
-			width: 640,
-			height: 480,
+			width: 400,
+			height: 300,
 			rtmp: {
 				bufferlength: 0.05
 			}

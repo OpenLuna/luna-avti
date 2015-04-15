@@ -5,42 +5,43 @@ var UP = 73; //i
 var DOWN = 75; //k
 var ON = "ON";
 var OFF = "OFF";
-var URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
+var SERVER_URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
+var websocket = null;
 
-var timerLog = [];
-
-function buttonClick(){
-	console.log(timerLog);
-	$.redirect(	"http://" + document.URL.split("/")[2] + '/nd1.php', 
-			{id: $( "#cars_list" ).val(), 
-			data: timerLog.join("\n")});
+function wsConnect(){
+	if(websocket != null){
+		websocket.close();
+	}
+	else{
+		var carURL = "ws://" + $("#cars_list option:selected").val();
+		websocket = new WebSocket(carURL);
+		websocket.onopen = function(evt){
+			$("button#wsconnect").text("Disconnect");
+		};
+		websocket.onclose = function(evt){
+			$("button#wsconnect").text("Connect");
+			websocket = null;
+		};
+		websocket.onmessage = function(evt){
+			console.log(evt);
+		};
+		websocket.onerror = function(evt){
+			console.log(evt);
+		};
+	}
 }
 
 var sendState = function() {
+	if(websocket == null) return;
+	
 	var left = (keysdown[LEFT] === true) ? ON : OFF;
 	var right = (keysdown[RIGHT] === true) ? ON : OFF;
 	var up = (keysdown[UP] === true) ? ON : OFF;
 	var down = (keysdown[DOWN] === true) ? ON : OFF;
-	var carId = $( "#cars_list" ).val();
 	var timestamp = (new Date()).getTime();
-	URL = "http://" + cars[carId]["ip"].trim() + ":" + cars[carId]["port"].trim();
-
-	$.ajax({
-		url: URL,
-		data: {
-			left: left,
-			right: right,
-			up: up,
-			down: down,
-			id: carId,
-			time: timestamp
-		},
-		success: function(data) {
-			$( "#ajax-result" ).text(data);
-			var r = $( "#cars_list option:selected" ).text() + "," + timestamp + ",client," + (((new Date()).getTime() - timestamp) / 1000);
-			timerLog.push(r);
-		}
-	});
+	
+	var cmd = "?up=" + up + "&down=" + down + "&left=" + left + "&right=" + right + "&time=" + timestamp;
+	websocket.send(cmd);
 }
 
 var handledown = function(e) {
@@ -92,7 +93,6 @@ var handleup = function(e) {
 }
 
 $(document).ready(function() {
-	// send event on keypress
 	$(window).keydown(handledown).keyup(handleup);
-	$("button#nd").click(buttonClick);
+	$("button#wsconnect").click(wsConnect);
 });
