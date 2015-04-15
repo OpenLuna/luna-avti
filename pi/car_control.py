@@ -1,5 +1,4 @@
 import RPi.GPIO as GPIO
-import time
 
 class Control:
     """constants for easy reading DO NOT TOUCH"""
@@ -52,8 +51,7 @@ class Control:
         GPIO.output((self.LED_GREEN, self.LED_RED), GPIO.LOW)
         GPIO.cleanup()
     
-    #zasveti z ledico za timeOn sekund
-    #timeOne = 0 sveti za zmeraj
+    #turn on or off green or red LED
     def LED(self, color, state):
         if color == "green":
             GPIO.output(self.LED_GREEN, GPIO.HIGH if state else GPIO.LOW)   
@@ -93,30 +91,6 @@ class Control:
                 steerState = 1
             else:
                 raise Exception("unknown steering command")
-    
-    def toggleForward(self):
-        if self.driveState < 1:
-            self.drive(self.DRIVE_FORWARD)
-        else:
-            self.drive(self.DRIVE_STOP)
-        
-    def toggleBackward(self):
-        if self.driveState > -1:
-            self.drive(self.DRIVE_BACKWARD)
-        else:
-            self.drive(self.DRIVE_STOP)
-            
-    def toggleLeft(self):
-        if self.steerState > -1:
-            self.steer(self.STEER_LEFT)
-        else:
-            self.steer(self.STEER_STOP)
-            
-    def toggleRight(self):
-        if self.steerState < 1:
-            self.steer(self.STEER_RIGHT)
-        else:
-            self.steer(self.STEER_STOP)
     
     def stopMotors(self):
         self.steer(self.STEER_STOP)
