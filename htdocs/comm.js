@@ -45,11 +45,17 @@ function sendState(){
 }
 
 function keypressHandle(e){
-	if(e.type == "keydown") keysdown[e.keyCode] = true;
-	else if(e.type == "keyup") keysdown[e.keyCode] = false;
+	if(e.type == "keydown"){
+		if(!keysdown[e.keyCode]){
+			keysdown[e.keyCode] = true;
+			sendState();
+		}
+	}
+	else if(e.type == "keyup"){
+		keysdown[e.keyCode] = false;
+		sendState();
+	}
 	else console.error(e);
-	
-	sendState();
 }
 
 $(document).ready(function() {
