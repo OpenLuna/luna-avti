@@ -11,7 +11,7 @@ var timerLog = [];
 
 function buttonClick(){
 	console.log(timerLog);
-	$.redirect(	"http://" + document.URL.split("/")[2] + '/nd.php', 
+	$.redirect(	"http://" + document.URL.split("/")[2] + '/nd1.php', 
 			{id: $( "#cars_list" ).val(), 
 			data: timerLog.join("\n")});
 }
@@ -21,9 +21,10 @@ var sendState = function() {
 	var right = (keysdown[RIGHT] === true) ? ON : OFF;
 	var up = (keysdown[UP] === true) ? ON : OFF;
 	var down = (keysdown[DOWN] === true) ? ON : OFF;
-	
+	var carId = $( "#cars_list" ).val();
 	var timestamp = (new Date()).getTime();
-	
+	URL = "http://" + cars[carId]["ip"].trim() + ":" + cars[carId]["port"].trim();
+
 	$.ajax({
 		url: URL,
 		data: {
@@ -31,7 +32,7 @@ var sendState = function() {
 			right: right,
 			up: up,
 			down: down,
-			id: $( "#cars_list" ).val(),
+			id: carId,
 			time: timestamp
 		},
 		success: function(data) {
