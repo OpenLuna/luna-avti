@@ -86,6 +86,7 @@ class WebsocketServer(WebSocketServerProtocol):
         
     def onClose(self, wasClean, code, reason):
         print "Connection CLOSED"
+        control.stopMotors()
 
 
 #****MAIN****#
