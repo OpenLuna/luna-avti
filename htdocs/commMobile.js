@@ -28,36 +28,18 @@ function wsConnect(){
 function orientationHandle(e){
 	if(websocket == null) return;
 	
-	$("#orientout").html(e.alpha + "<br/>" + e.beta + "<br/>" + e.gamma);
+	//$("#orientout").html(e.alpha + "<br/>" + e.beta + "<br/>" + e.gamma);
 	
-	var delta = 5;
+	var delta = 10;
 	var changed = false;
 	
 	if(e.beta < -delta){
-		if(!state.up){
-			state.up = true;
-			changed = true;
-		}
-	}
-	else if(e.beta > delta){
-		if(!state.down){
-			state.down = true;
-			changed = true;
-		}
-	}
-	else if(state.up || state.down){
-		state.up = false;
-		state.down = false;
-		changed = true;
-	}
-	
-	if(e.gamma < -delta){
 		if(!state.left){
 			state.left = true;
 			changed = true;
 		}
 	}
-	else if(e.gamma > delta){
+	else if(e.beta > delta){
 		if(!state.right){
 			state.right = true;
 			changed = true;
@@ -75,7 +57,23 @@ function orientationHandle(e){
 	}
 }
 
+function gas(evt){
+	evt.preventDefault();
+	if(evt.type == "touchstart" || evt.type == "mousedown"){
+		if(evt.target.id == "forward") state.up = true;
+		else state.down = true;
+	}
+	else{
+		if(evt.target.id == "forward") state.up = false;
+		else state.down = false;
+	}
+	
+	var cmd = "?up=" + (state.up ? "ON":"OFF") + "&down=" + (state.down ? "ON":"OFF") + "&left=" + (state.left ? "ON":"OFF") + "&right=" + (state.right ? "ON":"OFF") + "&time=" + ((new Date).getTime());
+	websocket.send(cmd);
+}
+
 $(document).ready(function() {
 	window.addEventListener("deviceorientation", orientationHandle, false);
 	$("button#wsconnect").click(wsConnect);
+	$("#forward, #backward").on("touchstart touchend mousedown mouseup", gas);
 });

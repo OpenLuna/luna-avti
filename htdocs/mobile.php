@@ -51,8 +51,8 @@ foreach ($all_cars as $car) {
 <div id="orientout">
 </div>
 
-<div id="sent">
-</div>
+<div id="backward"></div>
+<div id="forward"></div>
 
 </body>
 </html>

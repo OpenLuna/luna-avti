@@ -8,23 +8,9 @@ h1 {
 	text-align: center;
 }
 
-.commands {
-	text-align: center;
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.commands td[class="full"] {
-	border: 1px solid black;
-	border-radius: 3px;
-	background-color: #CDF;
-	width: 33.3%;
-	cursor: pointer;
-}
-
 .content {
 	background-color: #EEF;
-	width: 960px;
+	width: 100%;
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -32,4 +18,18 @@ h1 {
 #ajax-result {
 	border: 1px solid black;
 	border-radius: 3px;
+}
+
+#backward, #forward{
+	width:50vw;
+	height:100vh;
+	float:left;
+}
+
+#backward{
+	background-color: green;
+}
+
+#forward{
+	background-color: blue;
 }
