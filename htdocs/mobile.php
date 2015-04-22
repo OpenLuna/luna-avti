@@ -26,9 +26,9 @@ foreach ($all_cars as $car) {
 <html>
 <head>
 	<title>Communication test</title>
-	<link rel="stylesheet" type="text/css" href="main.css"/>
-	<script src="//cdn.jsdelivr.net/jquery/2.1.3/jquery.min.js"></script>
-	<script src="commMobile.js"></script>
+	<link rel="stylesheet" type="text/css" href="styles/main.css"/>
+	<script src="scripts/jquery-2.1.3.min.js"></script>
+	<script src="scripts/commMobile.js"></script>
 </head>
 
 <body>

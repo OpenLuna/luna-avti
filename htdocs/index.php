@@ -26,10 +26,10 @@ foreach ($all_cars as $car) {
 <html>
 <head>
 	<title>Communication test</title>
-	<link rel="stylesheet" type="text/css" href="main.css"/>
-	<script src="//cdn.jsdelivr.net/jquery/2.1.3/jquery.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="styles/main.css"/>
+	<script src="scripts/jquery-2.1.3.min.js"></script>
+	<script src="scripts/comm.js"></script>
 	<script src="http://jwpsrv.com/library/udi9iLWzEeSQBgp+lcGdIw.js"></script>
-	<script src="comm.js"></script>
 </head>
 
 <body>
@@ -62,19 +62,6 @@ foreach ($all_cars as $car) {
 			}
 		});
 	</script>
-	
-	<table class="commands">
-		<tr>
-			<td></td>
-			<td id="buttonUp" class="full">up</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td id="buttonLeft" class="full">left</td>
-			<td id="buttonDown" class="full">down</td>
-			<td id="buttonRight" class="full">right</td>
-		</tr>
-	</table>
 </div>
 
 </body>
