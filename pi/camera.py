@@ -7,14 +7,15 @@ from twisted.internet import reactor
 from twisted.internet import task
 
 class WebsocketServer(WebSocketServerProtocol):
+    def __init__(self):
+        self.s = task.LoopingCall(self.skljoc)
+    
     def onConnect(self, request):
         print "Got connection from", request.peer
     
     def onOpen(self):
         print "Connection open"
-        self.s = task.LoopingCall(self.skljoc)
         self.s.start(0)
-        print "askdajsd"
     
     def onMessage(self, payload, isBinary):
         print "here"
@@ -24,19 +25,12 @@ class WebsocketServer(WebSocketServerProtocol):
         self.s.stop()
     
     def skljoc(self):
-        with picamera.PiCamera() as camera:
-            camera.resolution = (640, 480)
-            camera.framerate = 60
-            start = 0
-            stream = io.BytesIO()
-            time.sleep(2)
-            for a in camera.capture_continuous(stream, format='jpeg', use_video_port=True, resize = (400, 300)):
-                print time.time() - start
-                self.sendMessage(stream.getvalue(), True, sync=True)
-                stream.seek(0)
-                stream.truncate()
-                yield
-                start=time.time()
+        start = time.time()
+        #camera.capture(stream, format='jpeg', use_video_port=True, quality = 50)
+        self.sendMessage(stream.getvalue(), True, sync=True)
+        print time.time() - start, stream.tell()
+        stream.seek(0)
+        stream.truncate()
 
 IP = "192.168.1.109"
 PORT = 12345
@@ -49,5 +43,12 @@ print "Openning websocket at", websocketURI
 factory = WebSocketServerFactory(websocketURI, debug = False)
 factory.protocol = WebsocketServer
 
-reactor.listenTCP(PORT, factory)
-reactor.run()
+camera = picamera.PiCamera()
+camera.resolution = (200, 150)
+stream = io.BytesIO()
+
+try:
+    reactor.listenTCP(PORT, factory)
+    reactor.run()
+finally:
+    camera.close()
