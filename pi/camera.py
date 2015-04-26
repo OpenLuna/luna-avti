@@ -5,6 +5,7 @@ from PIL import Image
 from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory
 from twisted.internet import reactor
 from twisted.internet import task
+from twisted.python.threadpool import ThreadPool
 
 class WebsocketServer(WebSocketServerProtocol):
     def __init__(self):
@@ -26,7 +27,7 @@ class WebsocketServer(WebSocketServerProtocol):
     
     def skljoc(self):
         start = time.time()
-        #camera.capture(stream, format='jpeg', use_video_port=True, quality = 50)
+        camera.capture(stream, format='jpeg', use_video_port=True, quality = 50)
         self.sendMessage(stream.getvalue(), True, sync=True)
         print time.time() - start, stream.tell()
         stream.seek(0)
@@ -45,6 +46,7 @@ factory.protocol = WebsocketServer
 
 camera = picamera.PiCamera()
 camera.resolution = (200, 150)
+camera.framerate = 60
 stream = io.BytesIO()
 
 try:
