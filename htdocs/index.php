@@ -29,7 +29,6 @@ foreach ($all_cars as $car) {
 	<link rel="stylesheet" type="text/css" href="styles/main.css"/>
 	<script src="scripts/jquery-2.1.3.min.js"></script>
 	<script src="scripts/comm.js"></script>
-	<script src="http://jwpsrv.com/library/udi9iLWzEeSQBgp+lcGdIw.js"></script>
 </head>
 
 <body>
@@ -49,19 +48,8 @@ foreach ($all_cars as $car) {
 	<button id = "wsconnect" type="button">Connect</button>
 
 	<div style="width:400px;margin:auto">
-		<p id = "container1">Please install the Flash Plugin</p>
+		<canvas id="canvas" width="400" height="300" style="border:1px solid #000000;"></canvas> 
 	</div>
-	
-	<script type = "text/javascript">
-		jwplayer("container1").setup({
-			file: "rtmp://212.235.189.232/flvplayback/ts_2_0_256",
-			width: 400,
-			height: 300,
-			rtmp: {
-				bufferlength: 0.05
-			}
-		});
-	</script>
 </div>
 
 </body>

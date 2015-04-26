@@ -8,8 +8,9 @@ var OFF = "OFF";
 var SERVER_URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
 var websocket = null;
 
-timeSum = 0; //logiranje
-packetCnt = 0; //logiranje
+prevTime = 0;
+sumTime = 0;
+pkgCnt = -1;
 
 function wsConnect(){
 	if(websocket != null){
@@ -18,19 +19,34 @@ function wsConnect(){
 	else{
 		var carURL = "ws://" + $("#cars_list option:selected").val();
 		websocket = new WebSocket(carURL);
+		console.log(websocket.binaryType);
 		websocket.onopen = function(evt){
 			$("button#wsconnect").text("Disconnect");
-			timeSum = 0; //logiranje
-			packetCnt = 0; //logiranje
+			sumTime = 0;
+			pkgCnt = -1;
 		};
 		websocket.onclose = function(evt){
 			$("button#wsconnect").text("Connect");
 			websocket = null;
-			console.log("Average: " + (timeSum / packetCnt) + " ms"); //logiranje
+			console.log("average: " + (sumTime / pkgCnt));
 		};
 		websocket.onmessage = function(evt){
-			timeSum += (new Date()).getTime() - parseInt(evt.data); //logiranje
-			console.log((new Date()).getTime() - parseInt(evt.data)); //logiranje
+			startTime = (new Date()).getTime();
+			
+			if(pkgCnt > -1){
+				sumTime += startTime - prevTime;
+				console.log(startTime - prevTime);
+			}
+			pkgCnt++;
+			prevTime = startTime;
+			
+			var ctx = $("#canvas")[0].getContext("2d");
+			evt.data.type = "image/jpeg";
+			var image = new Image();
+			image.src = URL.createObjectURL(evt.data);
+			image.onload = function(){
+				ctx.drawImage(image, 0, 0, 400, 300);
+			}
 		};
 		websocket.onerror = function(evt){
 			console.log(evt);
@@ -49,7 +65,6 @@ function sendState(){
 	
 	var cmd = "?up=" + up + "&down=" + down + "&left=" + left + "&right=" + right + "&time=" + timestamp;
 	websocket.send(cmd);
-	packetCnt++; //logiranje
 }
 
 function keypressHandle(e){
