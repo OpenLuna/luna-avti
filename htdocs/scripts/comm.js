@@ -19,7 +19,7 @@ function wsConnect(){
 	else{
 		var carURL = "ws://" + $("#cars_list option:selected").val();
 		websocket = new WebSocket(carURL);
-		console.log(websocket.binaryType);
+		
 		websocket.onopen = function(evt){
 			$("button#wsconnect").text("Disconnect");
 			sumTime = 0;
@@ -28,24 +28,26 @@ function wsConnect(){
 		websocket.onclose = function(evt){
 			$("button#wsconnect").text("Connect");
 			websocket = null;
-			console.log("average: " + (sumTime / pkgCnt));
+			console.log("average: " + (sumTime / pkgCnt) + " ms");
 		};
 		websocket.onmessage = function(evt){
-			startTime = (new Date()).getTime();
-			
-			if(pkgCnt > -1){
-				sumTime += startTime - prevTime;
-				console.log(startTime - prevTime);
-			}
-			pkgCnt++;
-			prevTime = startTime;
-			
-			var ctx = $("#canvas")[0].getContext("2d");
-			evt.data.type = "image/jpeg";
-			var image = new Image();
-			image.src = URL.createObjectURL(evt.data);
-			image.onload = function(){
-				ctx.drawImage(image, 0, 0, 400, 300);
+			if(evt.data instanceof Blob){
+				startTime = (new Date()).getTime();
+				
+				if(pkgCnt > -1){
+					sumTime += startTime - prevTime;
+					console.log((startTime - prevTime) + " ms");
+				}
+				pkgCnt++;
+				prevTime = startTime;
+				
+				var ctx = $("#canvas")[0].getContext("2d");
+				evt.data.type = "image/jpeg";
+				var image = new Image();
+				image.src = URL.createObjectURL(evt.data);
+				image.onload = function(){
+					ctx.drawImage(image, 0, 0, 400, 300);
+				}
 			}
 		};
 		websocket.onerror = function(evt){
