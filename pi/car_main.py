@@ -2,6 +2,8 @@ import car_control as cc
 import car_network as cn
 import time
 import sys
+import io
+import picamera
 
 from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory
 from twisted.internet import reactor
@@ -56,13 +58,17 @@ def checkNetworkConnection():
         control.LED("red", False);
 
 class WebsocketServer(WebSocketServerProtocol):
-    lastPacketID = -1
+    def __init__(self):
+        self.lastPacketID = -1
+        self.stream = io.BytesIO()
+        self.captureTask = task.LoopingCall(self.capture)
 
     def onConnect(self, request):
         print "Got connection from", request.peer
     
     def onOpen(self):
         print "Connection open"
+        self.captureTask.start(0)
     
     def onMessage(self, payload, isBinary):
         requests = {}
@@ -87,7 +93,13 @@ class WebsocketServer(WebSocketServerProtocol):
     def onClose(self, wasClean, code, reason):
         print "Connection CLOSED"
         control.stopMotors()
-
+        self.captureTask.stop()
+    
+    def capture(self):
+        camera.capture(self.stream, format='jpeg', use_video_port=True, quality = 50)
+        self.sendMessage(self.stream.getvalue(), True)
+        self.stream.seek(0)
+        self.stream.truncate()
 
 #****MAIN****#
 
@@ -123,6 +135,11 @@ while not cn.sendGETRequest(config["server ip"], "/advertise.php", config):
     print "Error executing GET"
     time.sleep(2)
 
+#configure camera
+camera = picamera.PiCamera()
+camera.resolution = (200, 150)
+camera.framerate = 60
+
 websocketURI = "ws://" + str(IP) + ":" + str(PORT)
 print "Openning websocket at", websocketURI
 factory = WebSocketServerFactory(websocketURI, debug = False)
@@ -134,4 +151,7 @@ task.LoopingCall(checkNetworkConnection).start(1)
 control.LED("green", True)
 print "Car is ready for driving!\n"
 
-reactor.run()
+try:
+    reactor.run()
+finally:
+    camera.close()

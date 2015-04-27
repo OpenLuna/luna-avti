@@ -1,11 +1,9 @@
 import io
 import picamera
 import time
-from PIL import Image
 from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory
 from twisted.internet import reactor
 from twisted.internet import task
-from twisted.python.threadpool import ThreadPool
 
 class WebsocketServer(WebSocketServerProtocol):
     def __init__(self):
@@ -28,7 +26,7 @@ class WebsocketServer(WebSocketServerProtocol):
     def skljoc(self):
         start = time.time()
         camera.capture(stream, format='jpeg', use_video_port=True, quality = 50)
-        self.sendMessage(stream.getvalue(), True, sync=True)
+        self.sendMessage(stream.getvalue(), True, doNotCompress=True)
         print time.time() - start, stream.tell()
         stream.seek(0)
         stream.truncate()
@@ -39,17 +37,17 @@ from twisted.python import log
 import sys
 log.startLogging(sys.stdout)
 
-websocketURI = "ws://" + str(IP) + ":" + str(PORT)
-print "Openning websocket at", websocketURI
-factory = WebSocketServerFactory(websocketURI, debug = False)
-factory.protocol = WebsocketServer
-
-camera = picamera.PiCamera()
-camera.resolution = (200, 150)
-camera.framerate = 60
-stream = io.BytesIO()
-
 try:
+    websocketURI = "ws://" + str(IP) + ":" + str(PORT)
+    print "Openning websocket at", websocketURI
+    factory = WebSocketServerFactory(websocketURI, debug = False)
+    factory.protocol = WebsocketServer
+
+    camera = picamera.PiCamera()
+    camera.resolution = (200, 150)
+    camera.framerate = 60
+    stream = io.BytesIO()
+
     reactor.listenTCP(PORT, factory)
     reactor.run()
 finally:
