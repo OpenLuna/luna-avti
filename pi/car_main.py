@@ -4,6 +4,7 @@ import time
 import sys
 import io
 import picamera
+import os
 
 from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory
 from twisted.internet import reactor
@@ -102,6 +103,8 @@ class WebsocketServer(WebSocketServerProtocol):
         self.stream.truncate()
 
 #****MAIN****#
+
+print "Process nicesness", os.nice(-20)
 
 IP = ""
 PORT = 12345
