@@ -1,3 +1,4 @@
 *.pyc
 *~
 pi/logs
+pi/output.txt
