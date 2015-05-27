@@ -63,6 +63,8 @@ class WebsocketServer(WebSocketServerProtocol):
         self.lastPacketID = -1
         self.stream = io.BytesIO()
         self.captureTask = task.LoopingCall(self.capture)
+        self.pingTask = task.LoopingCall(self.ping)
+        self.gotPong = True
 
     def onConnect(self, request):
         print "Got connection from", request.peer
@@ -70,8 +72,14 @@ class WebsocketServer(WebSocketServerProtocol):
     def onOpen(self):
         print "Connection open"
         self.captureTask.start(0)
+        self.pingTask.start(float(config["ping interval"]))
     
     def onMessage(self, payload, isBinary):
+        if payload == "pong":
+            print "pong"
+            self.gotPong = True
+            return
+        
         requests = {}
         payload = payload[payload.find("?")+1:]
         for r in payload.split("&"):
@@ -89,12 +97,23 @@ class WebsocketServer(WebSocketServerProtocol):
             return
         self.lastPacketID = packetID
         applyCommands(requests["up"], requests["down"], requests["left"], requests["right"])
-        self.sendMessage(requests["time"], False)
+        #self.sendMessage(requests["time"], False)
         
     def onClose(self, wasClean, code, reason):
         print "Connection CLOSED"
         control.stopMotors()
         self.captureTask.stop()
+        self.pingTask.stop()
+    
+    def ping(self):
+        if self.gotPong:
+            self.sendMessage("ping", False)
+            print "ping"
+            self.gotPong = False
+        else:
+            print "Did not get PONG... closing connection"
+            control.stopMotors()
+            self.sendClose()
     
     def capture(self):
         camera.capture(self.stream, format='jpeg', use_video_port=True, quality = 50)
