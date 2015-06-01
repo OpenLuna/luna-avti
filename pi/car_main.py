@@ -76,7 +76,6 @@ class WebsocketServer(WebSocketServerProtocol):
     
     def onMessage(self, payload, isBinary):
         if payload == "pong":
-            print "pong"
             self.gotPong = True
             return
         
@@ -108,7 +107,6 @@ class WebsocketServer(WebSocketServerProtocol):
     def ping(self):
         if self.gotPong:
             self.sendMessage("ping", False)
-            print "ping"
             self.gotPong = False
         else:
             print "Did not get PONG... closing connection"
