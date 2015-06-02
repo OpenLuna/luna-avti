@@ -20,6 +20,7 @@ def capture():
         if not runThread:
             break
         start = time.time()
+        camera.annotate_text = str(time.time() % 10)
 
 class WebsocketServer(WebSocketServerProtocol):
     def __init__(self):
@@ -56,7 +57,7 @@ class WebsocketServer(WebSocketServerProtocol):
         stream.seek(0)
         stream.truncate()"""
 
-IP = "193.2.177.109"
+IP = "192.168.1.111"
 PORT = 12345
 from twisted.python import log
 import sys
@@ -69,7 +70,7 @@ try:
     factory.protocol = WebsocketServer
 
     camera = picamera.PiCamera()
-    camera.resolution = (400, 300)
+    camera.resolution = (200, 150)
     camera.framerate = 60
     stream = io.BytesIO()
     streamLock = threading.Lock()
