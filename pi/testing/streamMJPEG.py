@@ -87,7 +87,7 @@ def main():
   t = threading.Thread(target=capture)
   t.start()
   try:
-    server = HTTPServer(('',8080), CamHandler)
+    server = HTTPServer(('',80), CamHandler)
     print "server started"
     server.serve_forever()
   except KeyboardInterrupt:
