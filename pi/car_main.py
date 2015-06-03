@@ -156,7 +156,4 @@ task.LoopingCall(checkNetworkConnection).start(1)
 control.LED("green", True)
 print "Car is ready for driving!\n"
 
-try:
-    reactor.run()
-finally:
-    camera.close()
+reactor.run()
