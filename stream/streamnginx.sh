@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # sintaksa za zagon:
-# ~$ ./pistream.sh server_ip [preset_location]
+# ~$ ./stream.sh server_ip [preset_location]
 # 
 # privzet preset location je ./custom_ultrafast.ffpreset
 # za "debug" namene je server ip lahko lunavm (stream na virtualko)
@@ -38,4 +38,4 @@ then
 fi
 
 # start stream
-raspivid -t 99999999 -n -w 320 -h 240 -o - | ffmpeg -an -i - -vcodec copy -an -pix_fmt yuv420p $USE_PRESET -tune zerolatency -f mpegts "udp://"$STREAM_IP"?pkt_size=1316"
+ffmpeg -an -f video4linux2 -s 640x480 -i /dev/video0 -c:v h264 -an -pix_fmt yuv420p -r 20 $USE_PRESET -tune zerolatency -f flv "udp://"$STREAM_IP"?pkt_size=1316"

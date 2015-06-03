@@ -7,15 +7,16 @@
 # za "debug" namene je server ip lahko lunavm (stream na virtualko)
 
 # nastavi ip streama
-STREAM_IP="212.235.189.232:10000"
+STREAM_IP=""
 if [ ! $1 ]
 then
 	echo "Cannot stream, no server IP set!"
 	exit 1
-elif [ ! $1 == "lunavm" ]
-then
+else
 	STREAM_IP=$1
 fi
+
+STREAM_IP=$STREAM_IP":10000"
 
 echo "Streaming to "$STREAM_IP
 echo ""
