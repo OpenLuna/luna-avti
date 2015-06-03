@@ -61,8 +61,6 @@ def checkNetworkConnection():
 class WebsocketServer(WebSocketServerProtocol):
     def __init__(self):
         self.lastPacketID = -1
-        self.stream = io.BytesIO()
-        self.captureTask = task.LoopingCall(self.capture)
         self.pingTask = task.LoopingCall(self.ping)
         self.gotPong = True
 
@@ -71,7 +69,6 @@ class WebsocketServer(WebSocketServerProtocol):
     
     def onOpen(self):
         print "Connection open"
-        self.captureTask.start(0)
         self.pingTask.start(float(config["ping interval"]))
     
     def onMessage(self, payload, isBinary):
@@ -101,7 +98,6 @@ class WebsocketServer(WebSocketServerProtocol):
     def onClose(self, wasClean, code, reason):
         print "Connection CLOSED"
         control.stopMotors()
-        self.captureTask.stop()
         self.pingTask.stop()
     
     def ping(self):
@@ -112,12 +108,6 @@ class WebsocketServer(WebSocketServerProtocol):
             print "Did not get PONG... closing connection"
             control.stopMotors()
             self.sendClose()
-    
-    def capture(self):
-        camera.capture(self.stream, format='jpeg', use_video_port=True, quality = 50)
-        self.sendMessage(self.stream.getvalue(), True)
-        self.stream.seek(0)
-        self.stream.truncate()
 
 #****MAIN****#
 
@@ -154,11 +144,6 @@ print "Advertising car to server (" + config["server ip"] + ")"
 while not cn.sendGETRequest(config["server ip"], "/advertise.php", config):
     print "Error executing GET"
     time.sleep(2)
-
-#configure camera
-camera = picamera.PiCamera()
-camera.resolution = (200, 150)
-camera.framerate = 60
 
 websocketURI = "ws://" + str(IP) + ":" + str(PORT)
 print "Openning websocket at", websocketURI

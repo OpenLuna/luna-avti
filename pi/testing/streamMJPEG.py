@@ -8,6 +8,8 @@ import io
 import time
 import picamera
 import threading
+import errno
+import socket
 
 camera=None
 streamLock = threading.Lock()
@@ -32,14 +34,15 @@ def capture():
 class CamHandler(BaseHTTPRequestHandler):
   def do_GET(self):
     if self.path.endswith('.mjpg'):
-        self.send_response(200)
-        self.send_header('Content-type','multipart/x-mixed-replace; boundary=--jpgboundary')
-        self.end_headers()
-        start=time.time()
-        cnt = 0
-        global readyImg
-        global runThread
         try:
+            self.send_response(200)
+            self.send_header('Content-type','multipart/x-mixed-replace; boundary=--jpgboundary')
+            self.end_headers()
+            start=time.time()
+            cnt = 0
+            global readyImg
+            global runThread
+            
             while True:
                 if streamLock.acquire(False):
                     if readyImg != False:
@@ -56,18 +59,10 @@ class CamHandler(BaseHTTPRequestHandler):
         except KeyboardInterrupt:
             streamLock.acquire(False)
             streamLock.release()
-        """for foo in camera.capture_continuous(stream, 'jpeg', use_video_port = True, quality = 30):
-          self.wfile.write("--jpgboundary")
-          self.send_header('Content-type','image/jpeg')
-          self.send_header('Content-length', stream.tell())
-          self.end_headers()
-          #start = time.time()
-          self.wfile.write(stream.getvalue())
-          stream.seek(0)
-          stream.truncate()
-          camera.annotate_text = str(time.time())
-          cnt += 1
-          print "%.2f" % (cnt / float(time.time() - start)), "FPS"""
+        except socket.error, e:
+            if e.errno == errno.EPIPE:
+                streamLock.acquire(False)
+                streamLock.release()
     else:
       self.send_response(200)
       self.send_header('Content-type','text/html')
