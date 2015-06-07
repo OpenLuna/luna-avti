@@ -105,8 +105,8 @@ configuration=
 			description="FLV Playback Sample",
 			name="flvplayback",
 			protocol="dynamiclinklibrary",
-			seekGranularity=0.1,
-			clientSideBuffer=5,
+			seekGranularity=1,
+			clientSideBuffer=0,
 			aliases=
 			{
 				"simpleLive",
@@ -193,27 +193,27 @@ configuration=
 					--this storage contains all properties with their
 					--default values. The only mandatory property is
 					--mediaFolder
-					description="Some storage",
+					description="Media storage",
 					mediaFolder="/usr/media/",
-					metaFolder="/tmp/metadata",
+					metaFolder="/tmp/metadata/",
 					enableStats=false,
-					clientSideBuffer=15,
+					clientSideBuffer=0,
 					keyframeSeek=false,
-					seekGranularity=0.1,
+					seekGranularity=1,
 				},
 				namedStorage2={
-					mediaFolder="/usr/media/mp4",
-					metaFolder="/tmp/metadata",
-					seekGranularity=0.2,
+					mediaFolder="/usr/media/mp4/",
+					metaFolder="/tmp/metadata/",
+					seekGranularity=1,
 					enableStats=true,
 				},
 				namedStorage3={
-					mediaFolder="/usr/media/flv",
-					metaFolder="/tmp/metadata",
+					mediaFolder="/usr/media/flv/",
+					metaFolder="/tmp/metadata/",
 				},
 				{
 					--this one doesn't have a name
-					mediaFolder="/usr/media/mp3",
+					mediaFolder="/usr/media/mp3/",
 				}
 			},
 		},
