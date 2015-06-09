@@ -159,4 +159,5 @@ print "Car is ready for driving!\n"
 try:
     reactor.run()
 finally:
-    camera.close()
+    #camera.close()
+    pass
