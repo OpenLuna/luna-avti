@@ -5,57 +5,32 @@ var UP = 73; //i
 var DOWN = 75; //k
 var ON = "ON";
 var OFF = "OFF";
-var SERVER_URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
+//var SERVER_URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
 var websocket = null;
-
-prevTime = 0;
-sumTime = 0;
-pkgCnt = -1;
 
 function wsConnect(){
 	if(websocket != null){
 		websocket.close();
 	}
 	else{
-		var carURL = "ws://" + $("#cars_list option:selected").val() + ":12345";
-		websocket = new WebSocket(carURL);
+		var serverURL = "ws://193.2.176.237:8080";
+		websocket = new WebSocket(serverURL);
 		
 		websocket.onopen = function(evt){
 			$("button#wsconnect").text("Disconnect");
-			sumTime = 0;
-			pkgCnt = -1;
-			$("#camera").attr("src", "http://" + $("#cars_list option:selected").val() + ":80/file.mjpg");
-			//console.log("http://" + $("#cars_list option:selected").val() + ":80/file.mjpg");
+			websocket.send("client:" + $("#cars_list option:selected").text());
+			//$("#camera").attr("src", "http://" + $("#cars_list option:selected").val() + ":80/file.mjpg");
 		};
 		websocket.onclose = function(evt){
 			$("button#wsconnect").text("Connect");
 			websocket = null;
 			$("#camera").attr("src", "");
-			//console.log("average: " + (sumTime / pkgCnt) + " ms");
 		};
 		websocket.onmessage = function(evt){
-			/*if(evt.data instanceof Blob){
-				startTime = (new Date()).getTime();
-				
-				if(pkgCnt > -1){
-					sumTime += startTime - prevTime;
-					console.log((startTime - prevTime) + " ms");
-				}
-				pkgCnt++;
-				prevTime = startTime;
-				
-				var ctx = $("#canvas")[0].getContext("2d");
-				evt.data.type = "image/jpeg";
-				var image = new Image();
-				image.src = URL.createObjectURL(evt.data);
-				image.onload = function(){
-					ctx.drawImage(image, 0, 0, 400, 300);
-				}
-			}
-			else */
 			if(evt.data == "ping"){
 				websocket.send("pong");
 			}
+			console.log(evt.data);
 		};
 		websocket.onerror = function(evt){
 			console.log(evt);
