@@ -6,7 +6,7 @@ import io
 import picamera
 import os
 
-from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory
+from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory
 from twisted.internet import reactor
 from twisted.internet import task
 
@@ -58,18 +58,16 @@ def checkNetworkConnection():
         time.sleep(0.5)
         control.LED("red", False);
 
-class WebsocketServer(WebSocketServerProtocol):
+class WebsocketClient(WebSocketClientProtocol):
     def __init__(self):
         self.lastPacketID = -1
         self.pingTask = task.LoopingCall(self.ping)
         self.gotPong = True
-
-    def onConnect(self, request):
-        print "Got connection from", request.peer
     
     def onOpen(self):
         print "Connection open"
-        self.pingTask.start(float(config["ping interval"]))
+        self.sendMessage("car:" + config["name"])
+        #self.pingTask.start(float(config["ping interval"]))
     
     def onMessage(self, payload, isBinary):
         if payload == "pong":
@@ -98,7 +96,7 @@ class WebsocketServer(WebSocketServerProtocol):
     def onClose(self, wasClean, code, reason):
         print "Connection CLOSED"
         control.stopMotors()
-        self.pingTask.stop()
+        #self.pingTask.stop()
     
     def ping(self):
         if self.gotPong:
@@ -145,16 +143,14 @@ while not cn.sendGETRequest(config["server ip"], "/advertise.php", config):
     print "Error executing GET"
     time.sleep(2)
 
-websocketURI = "ws://" + str(IP) + ":" + str(PORT)
-print "Openning websocket at", websocketURI
-factory = WebSocketServerFactory(websocketURI, debug = False)
-factory.protocol = WebsocketServer
+websocketURI = "ws://" + config["server ip"] + ":8080"
+print "Openning websocket to", websocketURI
+factory = WebSocketClientFactory(debug = False)
+factory.protocol = WebsocketClient
 
-reactor.listenTCP(PORT, factory)
+reactor.connectTCP(config["server ip"], 8080, factory)
 task.LoopingCall(checkNetworkConnection).start(1)
 
 control.LED("green", True)
-print "Car is ready for driving!\n"
-
 reactor.run()
 
