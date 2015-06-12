@@ -17,24 +17,21 @@ function wsConnect(){
 		websocket.close();
 	}
 	else{
-		var carURL = "ws://" + $("#cars_list option:selected").val() + ":12345";
+		var carURL = "ws://" + $("#cars_list option:selected").val();
 		websocket = new WebSocket(carURL);
 		
 		websocket.onopen = function(evt){
 			$("button#wsconnect").text("Disconnect");
 			sumTime = 0;
 			pkgCnt = -1;
-			$("#camera").attr("src", "http://" + $("#cars_list option:selected").val() + ":80/file.mjpg");
-			//console.log("http://" + $("#cars_list option:selected").val() + ":80/file.mjpg");
 		};
 		websocket.onclose = function(evt){
 			$("button#wsconnect").text("Connect");
 			websocket = null;
-			$("#camera").attr("src", "");
-			//console.log("average: " + (sumTime / pkgCnt) + " ms");
+			console.log("average: " + (sumTime / pkgCnt) + " ms");
 		};
 		websocket.onmessage = function(evt){
-			/*if(evt.data instanceof Blob){
+			if(evt.data instanceof Blob){
 				startTime = (new Date()).getTime();
 				
 				if(pkgCnt > -1){
@@ -52,8 +49,7 @@ function wsConnect(){
 					ctx.drawImage(image, 0, 0, 400, 300);
 				}
 			}
-			else */
-			if(evt.data == "ping"){
+			else if(evt.data == "ping"){
 				websocket.send("pong");
 			}
 		};
