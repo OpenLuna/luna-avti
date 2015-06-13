@@ -49,7 +49,7 @@ foreach ($all_cars as $car) {
 
 	<div style="width:400px;margin:auto">
 		<!--<canvas id="canvas" width="400" height="300" style="border:1px solid #000000;"></canvas>-->
-		<img id = "camera" />
+		<img id = "camera" src="http://192.168.1.104:4113/video.mjpg" />
 	</div>
 </div>
 
