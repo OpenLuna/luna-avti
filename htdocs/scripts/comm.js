@@ -13,7 +13,7 @@ function wsConnect(){
 		websocket.close();
 	}
 	else{
-		var serverURL = "ws://193.2.176.237:8080";
+		var serverURL = "ws://192.168.1.104:12345";
 		websocket = new WebSocket(serverURL);
 		
 		websocket.onopen = function(evt){
