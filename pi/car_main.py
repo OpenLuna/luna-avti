@@ -120,11 +120,11 @@ if len(sys.argv) > 1: config = loadConfig(sys.argv[1])
 else: config = loadConfig()
 
 #get local IP
-while True:
+"""while True:
     IP = cn.getLocalIP()
     if IP: break
     print "Error getting local IP: check network connection"
-    time.sleep(2)
+    time.sleep(2)"""
 
 config["car ip"] = IP
 config["port"] = PORT
@@ -143,13 +143,13 @@ while not cn.sendGETRequest(config["server ip"], "/advertise.php", config):
     print "Error executing GET"
     time.sleep(2)
 
-websocketURI = "ws://" + config["server ip"] + ":8080"
+websocketURI = "ws://" + config["server ip"] + ":12345"
 print "Openning websocket to", websocketURI
 factory = WebSocketClientFactory(debug = False)
 factory.protocol = WebsocketClient
 
-reactor.connectTCP(config["server ip"], 8080, factory)
-task.LoopingCall(checkNetworkConnection).start(1)
+reactor.connectTCP(config["server ip"], 12345, factory)
+#task.LoopingCall(checkNetworkConnection).start(1)
 
 control.LED("green", True)
 reactor.run()

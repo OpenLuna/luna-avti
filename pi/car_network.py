@@ -10,7 +10,7 @@ import struct
 #params = {k1:v2, k2:v2,...} get
 #encoded in url (k1=v1&k2=v2&...)
 def sendGETRequest(ip, path, params):
-    connection = httplib.HTTPConnection(ip)
+    connection = httplib.HTTPConnection(ip, 8080)
     request = path + "?" + urllib.urlencode(params)
     connection.request("GET", request)
     response = connection.getresponse()
