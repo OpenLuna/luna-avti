@@ -1,0 +1,16 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mjpegServer.js",
+  "scripts": {},
+  "author": "Ernest Beličič <ernest.belicic@gmail.com>",
+  "dependencies": {
+    "connect": "^3.4.0",
+    "serve-static": "^1.10.0",
+    "ws": "^0.7.2"
+  },
+  "devDependencies": {
+    "morgan": "^1.6.0"
+  }
+}

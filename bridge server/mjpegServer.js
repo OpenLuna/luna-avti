@@ -14,15 +14,24 @@ http.createServer(function (req, res) {
 		console.log("Client saved");
 		clientResponse = res;
 		res.writeHead(200, {'Content-Type': 'multipart/x-mixed-replace; boundary=--jpgboundary'});
+		req.on("close", function(){
+			console.log("end connection");
+			clientResponse = null;
+		});
 	}
 	else{
 		var i = 0;
 		req.on('data', function(chunk) {
 			//l = chunk[3] + 256 * chunk[2] + 65536 * chunk[1] + 16777216 * chunk[0];
 			//console.log(chunk[0] + " " + chunk[1] + " " + chunk[2] + " " + chunk[3] + " " +l);
-			clientResponse.write(chunk);
-			console.log(i);
-			i++;
+			if(clientResponse != null){
+				clientResponse.write(chunk);
+				console.log(i);
+				i++;
+			}
+			/*else{
+				console.log("dumped package");
+			}*/
 		});
 	}
 }).listen(4113);
