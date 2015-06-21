@@ -1,37 +1,39 @@
-var keysdown = {};
 var LEFT = 74; //j
 var RIGHT = 76; //l
 var UP = 73; //i
 var DOWN = 75; //k
 var ON = "ON";
 var OFF = "OFF";
-//var SERVER_URL = "http://" + document.URL.split("/")[2] + "/car_srv.php";
+var WS_SERVER = "ws://" + window.location.href.split("/")[2].split(":")[0] + ":4113/";
+
+var keysdown = {};
 var websocket = null;
 
-function wsConnect(){
+function wsConnection(){
 	if(websocket != null){
 		websocket.close();
 	}
 	else{
-		var serverURL = "ws://192.168.1.104:12345";
-		websocket = new WebSocket(serverURL);
+		var query = "token=123&name=RangeRover";
+		websocket = new WebSocket(WS_SERVER);
 		
 		websocket.onopen = function(evt){
-			$("button#wsconnect").text("Disconnect");
-			websocket.send("client:" + $("#cars_list option:selected").text());
+			$("button#ws_connect").text("Disconnect");
+			//websocket.send(query);
+			websocket.send("123");
 			//$("#camera").attr("src", "http://" + $("#cars_list option:selected").val() + ":80/file.mjpg");
 		};
+		
 		websocket.onclose = function(evt){
-			$("button#wsconnect").text("Connect");
-			websocket = null;
+			$("button#ws_connect").text("Connect");
 			$("#camera").attr("src", "");
+			websocket = null;
 		};
+		
 		websocket.onmessage = function(evt){
-			if(evt.data == "ping"){
-				websocket.send("pong");
-			}
 			console.log(evt.data);
 		};
+		
 		websocket.onerror = function(evt){
 			console.log(evt);
 		};
@@ -39,16 +41,16 @@ function wsConnect(){
 }
 
 function sendState(){
-	if(websocket == null) return;
-	
-	var timestamp = (new Date()).getTime();
-	var left = (keysdown[LEFT] === true) ? ON : OFF;
-	var right = (keysdown[RIGHT] === true) ? ON : OFF;
-	var up = (keysdown[UP] === true) ? ON : OFF;
-	var down = (keysdown[DOWN] === true) ? ON : OFF;
-	
-	var cmd = "?up=" + up + "&down=" + down + "&left=" + left + "&right=" + right + "&time=" + timestamp;
-	websocket.send(cmd);
+	if(websocket != null){
+		var timestamp = (new Date()).getTime();
+		var left = (keysdown[LEFT] === true) ? ON : OFF;
+		var right = (keysdown[RIGHT] === true) ? ON : OFF;
+		var up = (keysdown[UP] === true) ? ON : OFF;
+		var down = (keysdown[DOWN] === true) ? ON : OFF;
+		
+		var cmd = "?up=" + up + "&down=" + down + "&left=" + left + "&right=" + right + "&time=" + timestamp;
+		websocket.send(cmd);
+	}
 }
 
 function keypressHandle(e){
@@ -67,5 +69,5 @@ function keypressHandle(e){
 
 $(document).ready(function() {
 	$(window).keydown(keypressHandle).keyup(keypressHandle);
-	$("button#wsconnect").click(wsConnect);
+	$("button#ws_connect").click(wsConnection);
 });
