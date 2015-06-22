@@ -52,8 +52,9 @@ function wsConnection(){
 		
 		websocket.onclose = function(evt){
 			$("button#ws_connect").text("Connect");
-			$("#camera").attr("src", "");
+			//$("#camera").attr("src", "");
 			websocket = null;
+			console.log(evt.reason);
 		};
 		
 		websocket.onmessage = function(evt){
