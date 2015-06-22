@@ -53,11 +53,14 @@ class Control:
     
     #turn on or off green or red LED
     def LED(self, color, state):
-        if color == "green":
-            GPIO.output(self.LED_GREEN, GPIO.HIGH if state else GPIO.LOW)   
+        if color not in ["green", "red"]:
+            raise Exception("invalid LED color: possible green or red")
+        elif color == "green":
+            GPIO.output(self.LED_GREEN, state)   
         else:
-            GPIO.output(self.LED_RED, GPIO.HIGH if state else GPIO.LOW)
+            GPIO.output(self.LED_RED, state)
     
+    #change state of the back wheels
     def drive(self, cmd):
         if cmd == self.DRIVE_STOP:
             GPIO.output(self.ENABLE_B, GPIO.LOW)
@@ -75,6 +78,7 @@ class Control:
             else:
                 raise Exception("unknown driving command")
     
+    #change state of the front wheels
     def steer(self, cmd):
         if cmd == self.STEER_STOP:
             GPIO.output(self.ENABLE_A, GPIO.LOW)
@@ -92,6 +96,7 @@ class Control:
             else:
                 raise Exception("unknown steering command")
     
+    #completely stop the car
     def stopMotors(self):
         self.steer(self.STEER_STOP)
         self.drive(self.DRIVE_STOP)

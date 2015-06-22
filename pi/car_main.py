@@ -5,14 +5,13 @@ import sys
 import io
 import picamera
 import os
+import urlparse
 
 from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory
 from twisted.internet import reactor
 from twisted.internet import task
 
 def applyCommands(up, down, left, right):
-    print "Got state UP:", up, "DOWN:", down, "LEFT:", left, "RIGHT:", right
-    
     #driving
     if up == "on":
         control.drive(control.DRIVE_FORWARD)
@@ -27,130 +26,113 @@ def applyCommands(up, down, left, right):
         control.steer(control.STEER_RIGHT)
     else:
         control.steer(control.STEER_STOP)
+    
+    print "Got state UP:", up, "DOWN:", down, "LEFT:", left, "RIGHT:", right
 
 #read config from file
-def loadConfig(fileName = "car.config"):
+def loadConfig(fileName = None):
     config = {}
     lineNo = 0
+    if fileName == None:
+        fileName = os.path.dirname(os.path.realpath(__file__)) + "/car.config"
+    
     with open(fileName) as f:
         for line in f:
             lineNo += 1
             line = line.strip()
-            if not len(line) or line.startswith("#"):
+            if len(line) == 0 or line.startswith("#"):
                 continue
             line = line.split(":")
             if len(line) != 2:
-                print "Error reading config: line " + str(lineNo)
-                continue
+                raise Exception("Error reading config on line " + str(lineNo))
             key = line[0].strip().lower()
             value = line[1].strip()
             if not key or not value:
-                print "Error reading config: line " + str(lineNo)
-                continue
+                raise Exception("Error reading config on line " + str(lineNo))
             config[key] = value
     return config
 
-def checkNetworkConnection():
-    if not cn.getLocalIP():
-        print "Lost network connection"
+#print any dict in form:
+#header
+#  key1: value1
+#  key2: value2 ...
+def printDict(header, d):
+    print "\n", header
+    for k in d:
+        print "  " + str(k) + ": " + str(d[k])
+    print
+
+#check if car has network connection by getting local IP
+def hasNetworkConnection():
+    if cn.getLocalIP() == "":
+        print "No network connection"
         control.stopMotors()
         control.LED("red", True)
         time.sleep(0.5)
-        control.LED("red", False);
+        control.LED("red", False)
+        return False
+    return True
 
 class WebsocketClient(WebSocketClientProtocol):
     def __init__(self):
-        self.lastPacketID = -1
         self.pingTask = task.LoopingCall(self.ping)
         self.gotPong = True
     
     def onOpen(self):
-        print "Connection open"
-        self.sendMessage("car:" + config["name"])
-        #self.pingTask.start(float(config["ping interval"]))
+        print "Websocket connection opened"
+        print "Car is ready for driving."
+        self.sendMessage("token=" + config["secret key"] + "&name=" + config["name"])
+        self.pingTask.start(float(config["ping interval"]))
     
     def onMessage(self, payload, isBinary):
-        if payload == "pong":
-            self.gotPong = True
-            return
-        
-        requests = {}
-        payload = payload[payload.find("?")+1:]
-        for r in payload.split("&"):
-            r = r.split("=")
-            requests[r[0].lower()] = r[1].lower()
-        
-        for r in ["up", "down", "left", "right"]:
-            if r not in requests:
-                print "Got invalid commands"
-                return
-        
-        packetID = int(requests["time"])
-        if packetID < self.lastPacketID:
-            print "Got late packet with id " + str(packetID)
-            return
-        self.lastPacketID = packetID
-        applyCommands(requests["up"], requests["down"], requests["left"], requests["right"])
-        #self.sendMessage(requests["time"], False)
+        try:
+            request = urlparse.parse_qs(payload)
+            applyCommands(request["up"][0].lower(), request["down"][0].lower(), request["left"][0].lower(), request["right"][0].lower())
+        except KeyError:
+            control.stopMotors()
+            print "invalid commands"
         
     def onClose(self, wasClean, code, reason):
-        print "Connection CLOSED"
-        control.stopMotors()
-        #self.pingTask.stop()
+        print "Connection closed with code:", code, "and reason:", reason
+        try:
+            control.stopMotors()
+            self.pingTask.stop()
+            reactor.stop() #TODO: try reconnecting instead of exiting
+        except:
+            pass
     
     def ping(self):
         if self.gotPong:
-            self.sendMessage("ping", False)
+            self.sendPing()
             self.gotPong = False
         else:
             print "Did not get PONG... closing connection"
             control.stopMotors()
             self.sendClose()
+    
+    def onPong(self, payload):
+        self.gotPong = True
 
 #****MAIN****#
-
 print "Process nicesness", os.nice(-20)
 
-IP = ""
-PORT = 12345
+#read default config file (car.config) or the one provided as program argument
+config = loadConfig(sys.argv[1]) if len(sys.argv) > 1 else loadConfig()
+printDict("Config:", config)
 
-#read default config file (car.config) or the one provided
-#as program argument
-if len(sys.argv) > 1: config = loadConfig(sys.argv[1])
-else: config = loadConfig()
-
-#get local IP
-"""while True:
-    IP = cn.getLocalIP()
-    if IP: break
-    print "Error getting local IP: check network connection"
-    time.sleep(2)"""
-
-config["car ip"] = IP
-config["port"] = PORT
-
+#initialize car control
 control = cc.Control()
 
-#output config
-print "Config:"
-for k in config:
-    print "\t" + str(k) + ": " + str(config[k])
-print
+while not hasNetworkConnection():
+    time.sleep(1)
 
-#send car info to server
-print "Advertising car to server (" + config["server ip"] + ")"
-while not cn.sendGETRequest(config["server ip"], "/advertise.php", config):
-    print "Error executing GET"
-    time.sleep(2)
-
-websocketURI = "ws://" + config["server ip"] + ":12345"
-print "Openning websocket to", websocketURI
+#connect websocket
 factory = WebSocketClientFactory(debug = False)
 factory.protocol = WebsocketClient
+reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
+task.LoopingCall(hasNetworkConnection).start(1)
 
-reactor.connectTCP(config["server ip"], 12345, factory)
-#task.LoopingCall(checkNetworkConnection).start(1)
-
+#car ready
 control.LED("green", True)
 reactor.run()
 
