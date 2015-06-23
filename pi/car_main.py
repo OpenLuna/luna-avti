@@ -2,6 +2,7 @@ import car_control as cc
 import car_network as cn
 import picamera
 import urlparse
+import socket
 import httplib
 import urllib
 import time
@@ -120,7 +121,7 @@ class WebsocketClient(WebSocketClientProtocol):
 def streaming():
     camera = picamera.PiCamera()
     camera.resolution = (400, 300)
-    camera.framerate = 60
+    camera.framerate = 25
     stream = io.BytesIO()
     cnt = 0
     print "Streaming started"
@@ -130,9 +131,11 @@ def streaming():
         conn.putrequest("GET", "/streamreg?" + urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
         conn.putheader("Content-Length", "4000000000000")
         conn.endheaders()
-        
+        conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) #hack may increase transmission rate
+        conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_CORK, 0) #hack may increase transmission rate
         start=time.time()
         for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 20):
+            #if not (cnt % 1):
             conn.send("--jpgboundary\n")
             conn.send("Content-type: image/jpeg\n")
             conn.send("Content-length: " + str(stream.tell()) + "\n\n")
