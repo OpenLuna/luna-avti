@@ -152,7 +152,7 @@ def streaming():
 print "Process nicesness", os.nice(-20)
 
 #read default config file (car.config) or the one provided as program argument
-config = loadConfig(sys.argv[1]) if len(sys.argv) > 1 else loadConfig()
+config = loadConfig(sys.argv[2]) if len(sys.argv) > 2 else loadConfig()
 printDict("Config:", config)
 
 #initialize car control
@@ -167,9 +167,13 @@ factory.protocol = WebsocketClient
 reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
 task.LoopingCall(hasNetworkConnection).start(1)
 
-streamProcess = Process(target = streaming)
-streamProcess.daemon = True
-streamProcess.start()
+runStreaming = True
+if len(sys.argv) > 1:
+    runStreaming = sys.argv[1].lower() == "true"
+if runStreaming:
+    streamProcess = Process(target = streaming)
+    streamProcess.daemon = True
+    streamProcess.start()
 
 reactor.run()
 
