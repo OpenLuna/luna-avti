@@ -97,7 +97,8 @@ class WebsocketClient(WebSocketClientProtocol):
         try:
             control.stopMotors()
             self.pingTask.stop()
-            reactor.stop() #TODO: try reconnecting instead of exiting
+            #reactor.stop() #TODO: try reconnecting instead of exiting
+            reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
         except:
             pass
     
