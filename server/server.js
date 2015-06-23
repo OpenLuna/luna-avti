@@ -3,22 +3,49 @@ var ServeStatic = require("serve-static");
 var Logging = require("morgan");
 var WebSocketServer = require('ws').Server;
 var QueryString = require("querystring");
+var URL = require("url");
 
 //app is http server that serves static files in /public folder
 var app = Connect();
 //app.use(Logging("combined")); //turn off logging after 
 app.use("/cars_list", function(req, res, next){
 	res.writeHead(200, {"Content-Type": "application/json"});
-	res.end(JSON.stringify(Object.keys(cars)));
+	res.end(JSON.stringify(Object.keys(carsWS)));
 });
 app.use(ServeStatic(__dirname + "/public"));
 app.listen(80);
 
-//var streamApp = Connect();
-
+//streamApp is http server that redirects mjpeg streams
+var streamApp = Connect();
+streamApp.use("/streamreg", function(req, res, next){
+	query = URL.parse(req.url, true).query;
+	if(query.token == CAR_SECRET){
+		req.on("data", function(chunk){
+			if(carsSTREAM[query.name]){
+				carsSTREAM[query.name].write(chunk);
+			}
+		});
+	}
+	else{
+		res.writeHead(404);
+		res.end("wrong token for stream registration");
+	}
+});
+streamApp.use(function(req, res, next){
+	var query = URL.parse(req.url, true).query;
+	res.writeHead(200, {'Content-Type': 'multipart/x-mixed-replace; boundary=--jpgboundary'});
+	carsSTREAM[query.name] = res;
+	
+	req.on("close", function(){
+		console.log("closed");
+		delete carsSTREAM[query.name];
+	});
+});
+streamApp.listen(4114);
 
 var CAR_SECRET = 133780085; //car token (shared secret)
-var cars = {};
+var carsWS = {}; //websocket connections of cars
+var carsSTREAM = {}; //stream redirections for cars
 
 //wss is websocket server
 var wss = new WebSocketServer({port: 4113});
@@ -35,19 +62,18 @@ wss.on("connection", function(ws){
 					console.log("\nCar token accepted: " + query.name + "\n");
 					ws.type = "car";
 					ws.name = query.name;
-					cars[query.name] = ws;
+					carsWS[query.name] = ws;
 				}
 				else if(token > 0 && token < 1000){ //client token validation
-					console.log("\nClient token " + token + " accepted");
-					console.log("Want connection with " + query.name + "\n");
+					console.log("\nClient token " + token + " accepted. Want connection with " + query.name + "\n");
 					ws.type = "client";
 					ws.token = token;
-					if(cars[query.name] === undefined)
+					if(carsWS[query.name] === undefined)
 						throw "car offline";
-					else if(cars[query.name].clientWS !== undefined)
+					else if(carsWS[query.name].clientWS !== undefined)
 						throw "car already connected with some client";
 					else{ //accept connection
-						ws.carWS = cars[query.name]; //connect client websocket with car websocket
+						ws.carWS = carsWS[query.name]; //connect client websocket with car websocket
 						ws.carWS.clientWS = ws; //connect car websocket with client websocket
 					}
 				}
@@ -76,7 +102,7 @@ wss.on("connection", function(ws){
 		}
 		
 		if(ws.clientWS !== undefined){ //closing connection with car that is connected with client
-			delete cars[ws.name];
+			delete carsWS[ws.name];
 			ws.clientWS.close(1000, "car went offline"); //close client and send reason
 		}
 		else if(ws.carWS !== undefined){ //closing connection with client

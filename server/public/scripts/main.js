@@ -42,13 +42,14 @@ function wsConnection(){
 		websocket.close();
 	}
 	else{
-		var query = "token=123&name=" + encodeURIComponent($("select#cars_list").val());
+		var token = 123;
+		var query = encodeURI("token=" + token + "&name=" + $("select#cars_list").val());
 		websocket = new WebSocket(WS_URL);
 		
 		websocket.onopen = function(evt){
 			$("button#ws_connect").text("Disconnect");
 			$("#status").text("Connected to " + $("select#cars_list").val());
-			$("#stream").attr("src", STREAM_URL);
+			$("#stream").attr("src", encodeURI(STREAM_URL + "?token=" + token + "&name=" + $("select#cars_list").val()));
 			websocket.send(query);
 		};
 		
