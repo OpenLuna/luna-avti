@@ -83,7 +83,7 @@ class WebsocketClient(WebSocketClientProtocol):
     
     def onOpen(self):
         print "Websocket connection opened"
-        print "Car is ready for driving."
+        print "Car is ready for driving"
         self.sendMessage(urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
         self.pingTask.start(float(config["ping interval"]))
     
