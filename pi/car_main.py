@@ -158,14 +158,15 @@ printDict("Config:", config)
 #initialize car control
 control = cc.Control()
 
-while not hasNetworkConnection():
-    time.sleep(1)
+#TODO: check network connection with mobile dongle
+#while not hasNetworkConnection():
+#    time.sleep(1)
 
 #connect websocket
 factory = WebSocketClientFactory(debug = False)
 factory.protocol = WebsocketClient
 reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
-task.LoopingCall(hasNetworkConnection).start(1)
+#task.LoopingCall(hasNetworkConnection).start(1)
 
 runStreaming = True
 if len(sys.argv) > 1:
