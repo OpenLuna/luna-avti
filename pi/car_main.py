@@ -1,15 +1,18 @@
 import car_control as cc
 import car_network as cn
+import picamera
+import urlparse
+import httplib
+import urllib
 import time
 import sys
-import io
-import picamera
 import os
-import urlparse
+import io
 
 from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory
 from twisted.internet import reactor
 from twisted.internet import task
+from multiprocessing import Process
 
 def applyCommands(up, down, left, right):
     #driving
@@ -81,7 +84,7 @@ class WebsocketClient(WebSocketClientProtocol):
     def onOpen(self):
         print "Websocket connection opened"
         print "Car is ready for driving."
-        self.sendMessage("token=" + config["secret key"] + "&name=" + config["name"])
+        self.sendMessage(urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
         self.pingTask.start(float(config["ping interval"]))
     
     def onMessage(self, payload, isBinary):
@@ -97,7 +100,6 @@ class WebsocketClient(WebSocketClientProtocol):
         try:
             control.stopMotors()
             self.pingTask.stop()
-            #reactor.stop() #TODO: try reconnecting instead of exiting
             reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
         except:
             pass
@@ -113,6 +115,37 @@ class WebsocketClient(WebSocketClientProtocol):
     
     def onPong(self, payload):
         self.gotPong = True
+
+def streaming():
+    camera = picamera.PiCamera()
+    camera.resolution = (400, 300)
+    camera.framerate = 60
+    stream = io.BytesIO()
+    cnt = 0
+    print "Streaming started"
+    try:
+        conn = httplib.HTTPConnection(config["server ip"], int(config["stream port"]))
+        #conn.set_debuglevel(1)
+        conn.putrequest("GET", "/streamreg?" + urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
+        conn.putheader("Content-Length", "4000000000000")
+        conn.endheaders()
+        
+        start=time.time()
+        for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 20):
+            conn.send("--jpgboundary\n")
+            conn.send("Content-type: image/jpeg\n")
+            conn.send("Content-length: " + str(stream.tell()) + "\n\n")
+            conn.send(stream.getvalue())
+            stream.seek(0)
+            stream.truncate()
+            cnt += 1
+            FPS =   ("%.2f" % (cnt / (time.time() - start))) + " FPS"
+            camera.annotate_text = FPS
+            #print FPS
+    except Exception as e:
+        print "Streaming finished", e
+        camera.close()
+        conn.close()
 
 #****MAIN****#
 print "Process nicesness", os.nice(-20)
@@ -132,6 +165,10 @@ factory = WebSocketClientFactory(debug = False)
 factory.protocol = WebsocketClient
 reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
 task.LoopingCall(hasNetworkConnection).start(1)
+
+streamProcess = Process(target = streaming)
+streamProcess.daemon = True
+streamProcess.start()
 
 #car ready
 control.LED("green", True)
