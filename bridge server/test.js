@@ -27,21 +27,25 @@ wss.on("connection", function(ws){
 				var query = QueryString.parse(message);
 				var token = parseInt(query.token);
 				
-				if(token == CAR_SECRET){
+				//car token
+				if(token == CAR_SECRET){ 
 					console.log("\nCar token accepted: " + query.name + "\n");
-					cars[query.name] = ws;
+					ws.type = "car";
 					ws.name = query.name;
+					cars[query.name] = ws;
 				}
-				else if(token > 0 && token < 1000){ //token validation
+				else if(token > 0 && token < 1000){ //client token validation
 					console.log("\nClient token " + token + " accepted");
 					console.log("Want connection with " + query.name + "\n");
+					ws.type = "client";
+					ws.token = token;
 					if(cars[query.name] === undefined)
 						throw "car offline";
 					else if(cars[query.name].clientWS !== undefined)
 						throw "car already connected with some client";
-					else{
-						ws.carWS = cars[query.name];
-						ws.carWS.clientWS = ws;
+					else{ //accept connection
+						ws.carWS = cars[query.name]; //connect client websocket with car websocket
+						ws.carWS.clientWS = ws; //connect car websocket with client websocket
 					}
 				}
 				else{
@@ -52,18 +56,27 @@ wss.on("connection", function(ws){
 				ws.close(1000, error);
 			}
 		}
-		else{
+		else{ //client sends message. redirect to car
 			ws.carWS.send(message);
 		}
     });
 	
 	ws.on("close", function(code, message){
-		console.log("Disconnect with code: " + code + " and message: " + message);
-		if(ws.clientWS !== undefined){
-			delete cars[ws.name];
-			ws.clientWS.close(1000, "car went offline");
+		if(ws.type == "car"){
+			console.log("Car \"" + ws.name + "\" disconnected with code " + code + " and reason \"" + message + "\"");
 		}
-		else if(ws.carWS !== undefined){
+		else if(ws.type == "client"){
+			console.log("Client with token " + ws.token + " disconnected with code " + code + " and reason \"" + message + "\"");
+		}
+		else{
+			throw "UNKNOWN DISCONNECT";
+		}
+		
+		if(ws.clientWS !== undefined){ //closing connection with car that is connected with client
+			delete cars[ws.name];
+			ws.clientWS.close(1000, "car went offline"); //close client and send reason
+		}
+		else if(ws.carWS !== undefined){ //closing connection with client
 			delete ws.carWS.clientWS;
 		}
 	});
@@ -73,4 +86,4 @@ wss.on("connection", function(ws){
 	});
 });
 
-console.log("Server running");
+console.log("SERVER RUNNING\n");

@@ -46,15 +46,16 @@ function wsConnection(){
 		
 		websocket.onopen = function(evt){
 			$("button#ws_connect").text("Disconnect");
+			$("#status").text("Connected to " + $("select#cars_list").val());
 			websocket.send(query);
 			//$("#camera").attr("src", "http://" + $("#cars_list option:selected").val() + ":80/file.mjpg");
 		};
 		
 		websocket.onclose = function(evt){
 			$("button#ws_connect").text("Connect");
+			$("#status").text("Close reason: " + evt.reason);
 			//$("#camera").attr("src", "");
 			websocket = null;
-			console.log(evt.reason);
 		};
 		
 		websocket.onmessage = function(evt){
@@ -62,6 +63,7 @@ function wsConnection(){
 		};
 		
 		websocket.onerror = function(evt){
+			$("#status").text("ERROR: " + evt);
 			console.log(evt);
 		};
 	}
