@@ -6,13 +6,16 @@ var QueryString = require("querystring");
 
 //app is http server that serves static files in /public folder
 var app = Connect();
-app.use(Logging("combined")); //turn off logging after 
+//app.use(Logging("combined")); //turn off logging after 
 app.use("/cars_list", function(req, res, next){
 	res.writeHead(200, {"Content-Type": "application/json"});
 	res.end(JSON.stringify(Object.keys(cars)));
 });
 app.use(ServeStatic(__dirname + "/public"));
 app.listen(80);
+
+//var streamApp = Connect();
+
 
 var CAR_SECRET = 133780085; //car token (shared secret)
 var cars = {};

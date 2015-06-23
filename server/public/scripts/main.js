@@ -5,7 +5,8 @@ var DOWN = 75; //k
 var ON = "ON";
 var OFF = "OFF";
 var WS_URL = "ws://" + window.location.href.split("/")[2].split(":")[0] + ":4113/";
-var HTTP_URL = "http://" + window.location.href.split("/")[2].split(":")[0] + ":80/"
+var STREAM_URL = "http://" + window.location.href.split("/")[2].split(":")[0] + ":4114/stream.mjpg";
+var HTTP_URL = "http://" + window.location.href.split("/")[2].split(":")[0] + ":80/";
 
 var keysdown = {};
 var websocket = null;
@@ -47,14 +48,14 @@ function wsConnection(){
 		websocket.onopen = function(evt){
 			$("button#ws_connect").text("Disconnect");
 			$("#status").text("Connected to " + $("select#cars_list").val());
+			$("#stream").attr("src", STREAM_URL);
 			websocket.send(query);
-			//$("#camera").attr("src", "http://" + $("#cars_list option:selected").val() + ":80/file.mjpg");
 		};
 		
 		websocket.onclose = function(evt){
 			$("button#ws_connect").text("Connect");
 			$("#status").text("Close reason: " + evt.reason);
-			//$("#camera").attr("src", "");
+			$("#stream").attr("src", "http://www.joomlaworks.net/images/demos/galleries/abstract/7.jpg");
 			websocket = null;
 		};
 		

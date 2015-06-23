@@ -1,16 +1,8 @@
-/*var WebSocketServer = require('ws').Server;
-var wss = new WebSocketServer({port: 4113});
-console.log("WS server opened");
-
-wss.on('connection', function(ws) {
-    ws.on('message', function(message) {
-		console.log(message);
-    });
-});*/
 var clientResponse = null;
 var http = require('http');
+var url = require("url");
 http.createServer(function (req, res) {
-	if(req.url == "/video.mjpg"){
+	if(req.url == "/stream.mjpg"){
 		console.log("Client saved");
 		clientResponse = res;
 		res.writeHead(200, {'Content-Type': 'multipart/x-mixed-replace; boundary=--jpgboundary'});
@@ -20,19 +12,13 @@ http.createServer(function (req, res) {
 		});
 	}
 	else{
+		console.log(url.parse(req.url, true));
 		var i = 0;
 		req.on('data', function(chunk) {
-			//l = chunk[3] + 256 * chunk[2] + 65536 * chunk[1] + 16777216 * chunk[0];
-			//console.log(chunk[0] + " " + chunk[1] + " " + chunk[2] + " " + chunk[3] + " " +l);
 			if(clientResponse != null){
 				clientResponse.write(chunk);
-				console.log(i);
-				i++;
 			}
-			/*else{
-				console.log("dumped package");
-			}*/
 		});
 	}
-}).listen(4113);
+}).listen(4114);
 console.log('Server running');
