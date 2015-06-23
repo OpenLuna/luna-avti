@@ -37,7 +37,6 @@ streamApp.use(function(req, res, next){
 	carsSTREAM[query.name] = res;
 	
 	req.on("close", function(){
-		console.log("closed");
 		delete carsSTREAM[query.name];
 	});
 });
@@ -51,7 +50,7 @@ var carsSTREAM = {}; //stream redirections for cars
 var wss = new WebSocketServer({port: 4113});
 wss.on("connection", function(ws){
 	ws.on("message", function(message, flags){
-		console.log("Message: " + message);
+		//console.log("Message: " + message);
 		if(ws.carWS === undefined){
 			try{
 				var query = QueryString.parse(message);
@@ -59,13 +58,13 @@ wss.on("connection", function(ws){
 				
 				//car token
 				if(token == CAR_SECRET){ 
-					console.log("\nCar token accepted: " + query.name + "\n");
+					console.log("Car token accepted: " + query.name);
 					ws.type = "car";
 					ws.name = query.name;
 					carsWS[query.name] = ws;
 				}
 				else if(token > 0 && token < 1000){ //client token validation
-					console.log("\nClient token " + token + " accepted. Want connection with " + query.name + "\n");
+					console.log("Client token " + token + " accepted. Want connection with " + query.name);
 					ws.type = "client";
 					ws.token = token;
 					if(carsWS[query.name] === undefined)
@@ -92,10 +91,10 @@ wss.on("connection", function(ws){
 	
 	ws.on("close", function(code, message){
 		if(ws.type == "car"){
-			console.log("Car \"" + ws.name + "\" disconnected with code " + code + " and reason \"" + message + "\"");
+			console.log("Car \"" + ws.name + "\" DISCONNECTED with code " + code + " and reason \"" + message + "\"");
 		}
 		else if(ws.type == "client"){
-			console.log("Client with token " + ws.token + " disconnected with code " + code + " and reason \"" + message + "\"");
+			console.log("Client with token " + ws.token + " DISCONNECTED with code " + code + " and reason \"" + message + "\"");
 		}
 		else{
 			throw "UNKNOWN DISCONNECT";
