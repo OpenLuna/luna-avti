@@ -20,10 +20,11 @@ var streamApp = Connect();
 streamApp.use("/streamreg", function(req, res, next){
 	query = URL.parse(req.url, true).query;
 	if(query.token == CAR_SECRET){
+		carsSTREAM[query.name] = [];
 		req.on("data", function(chunk){
-			if(carsSTREAM[query.name]){
-				carsSTREAM[query.name].write(chunk);
-			}
+			carsSTREAM[query.name].forEach(function(e){
+				e.write(chunk);
+			});
 		});
 	}
 	else{
@@ -34,10 +35,11 @@ streamApp.use("/streamreg", function(req, res, next){
 streamApp.use(function(req, res, next){
 	var query = URL.parse(req.url, true).query;
 	res.writeHead(200, {'Content-Type': 'multipart/x-mixed-replace; boundary=--jpgboundary'});
-	carsSTREAM[query.name] = res;
+	carsSTREAM[query.name].push(res);
 	
 	req.on("close", function(){
-		delete carsSTREAM[query.name];
+		var i = carsSTREAM[query.name].indexOf(res);
+		carsSTREAM[query.name].splice(i, 1);
 	});
 });
 streamApp.listen(4114);
