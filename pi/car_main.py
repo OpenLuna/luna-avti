@@ -84,6 +84,7 @@ class WebsocketClient(WebSocketClientProtocol):
     def onOpen(self):
         print "Websocket connection opened"
         print "Car is ready for driving"
+        control.LED("green", True)
         self.sendMessage(urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
         self.pingTask.start(float(config["ping interval"]))
     
@@ -170,7 +171,5 @@ streamProcess = Process(target = streaming)
 streamProcess.daemon = True
 streamProcess.start()
 
-#car ready
-control.LED("green", True)
 reactor.run()
 
