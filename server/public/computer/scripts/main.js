@@ -6,7 +6,7 @@ var ON = "ON";
 var OFF = "OFF";
 var WS_URL = "ws://" + window.location.href.split("/")[2].split(":")[0] + ":4113/";
 var STREAM_URL = "http://" + window.location.href.split("/")[2].split(":")[0] + ":4114/stream.mjpg";
-var HTTP_URL = "http://" + window.location.href.split("/")[2].split(":")[0] + ":80/";
+var HTTP_URL = "http://" + window.location.href.split("/")[2].split(":")[0] + ":8080/";
 
 var keysdown = {};
 var websocket = null;
