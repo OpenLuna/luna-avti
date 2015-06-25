@@ -69,8 +69,9 @@ class WebsocketClient(WebSocketClientProtocol):
 
 def streaming():
     camera = picamera.PiCamera()
-    camera.resolution = (400, 300)
-    camera.framerate = 25
+    camera.resolution = (200, 150)
+    camera.framerate = 15
+    #camera.color_effects = (128, 128)
     stream = io.BytesIO()
     cnt = 0
     print "Streaming started"
@@ -83,18 +84,18 @@ def streaming():
         conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) #hack may increase transmission rate
         conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_CORK, 0) #hack may increase transmission rate
         start=time.time()
-        for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 20):
+        for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 10):
             #if not (cnt % 1):
             conn.send("--jpgboundary\n")
             conn.send("Content-type: image/jpeg\n")
             conn.send("Content-length: " + str(stream.tell()) + "\n\n")
             conn.send(stream.getvalue())
-            stream.seek(0)
-            stream.truncate()
             cnt += 1
             FPS =   ("%.2f" % (cnt / (time.time() - start))) + " FPS"
-            camera.annotate_text = FPS
-            #print FPS
+            #camera.annotate_text = FPS
+            #print FPS, str(stream.tell())
+            stream.seek(0)
+            stream.truncate()
     except Exception as e:
         print "Streaming finished", e
         camera.close()
