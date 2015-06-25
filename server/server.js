@@ -35,6 +35,7 @@ streamApp.use("/streamreg", function(req, res, next){
 streamApp.use(function(req, res, next){
 	var query = URL.parse(req.url, true).query;
 	res.writeHead(200, {'Content-Type': 'multipart/x-mixed-replace; boundary=--jpgboundary'});
+	if(carsSTREAM[query.name] === undefined) carsSTREAM[query.name] = [];
 	carsSTREAM[query.name].push(res);
 	
 	req.on("close", function(){
@@ -98,16 +99,17 @@ wss.on("connection", function(ws){
 		else if(ws.type == "client"){
 			console.log("Client with token " + ws.token + " DISCONNECTED with code " + code + " and reason \"" + message + "\"");
 		}
-		else{
-			throw "UNKNOWN DISCONNECT";
-		}
 		
-		if(ws.clientWS !== undefined){ //closing connection with car that is connected with client
+		if(ws.type == "car"){
 			delete carsWS[ws.name];
-			ws.clientWS.close(1000, "car went offline"); //close client and send reason
+			if(ws.clientWS !== undefined){ //closing connection with car that is connected with client
+				ws.clientWS.close(1000, "car went offline"); //close client and send reason
+			}
 		}
-		else if(ws.carWS !== undefined){ //closing connection with client
-			delete ws.carWS.clientWS;
+		else if(ws.type == "client"){
+			if(ws.carWS !== undefined){ //closing connection with client
+				delete ws.carWS.clientWS;
+			}
 		}
 	});
 	

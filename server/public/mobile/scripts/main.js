@@ -11,6 +11,8 @@ var HTTP_URL = "http://" + window.location.href.split("/")[2].split(":")[0] + ":
 var keysdown = {};
 var websocket = null;
 
+var state = {up: false, down: false, left:false, right: false};
+
 function keypressHandle(e){
 	if(e.type == "keydown"){
 		if(!keysdown[e.keyCode]){
@@ -26,13 +28,9 @@ function keypressHandle(e){
 }
 
 function sendState(){
+	//console.log(state);
 	if(websocket != null){
-		var left = (keysdown[LEFT] === true) ? ON : OFF;
-		var right = (keysdown[RIGHT] === true) ? ON : OFF;
-		var up = (keysdown[UP] === true) ? ON : OFF;
-		var down = (keysdown[DOWN] === true) ? ON : OFF;
-		
-		var cmd = "up=" + up + "&down=" + down + "&left=" + left + "&right=" + right;
+		var cmd = "up=" + (state.up ? ON:OFF) + "&down=" + (state.down ? ON:OFF) + "&left=" + (state.left ? ON:OFF) + "&right=" + (state.right ? ON:OFF);
 		websocket.send(cmd);
 	}
 }
@@ -45,7 +43,6 @@ function wsConnection(){
 		var token = 123;
 		var query = encodeURI("token=" + token + "&name=" + $("select#cars_list").val());
 		websocket = new WebSocket(WS_URL);
-		
 		websocket.onopen = function(evt){
 			$("button#ws_connect").text("Disconnect");
 			$("#status").text("Connected to " + $("select#cars_list").val());
@@ -58,6 +55,7 @@ function wsConnection(){
 			$("#status").text("Close reason: " + evt.reason);
 			$("#stream").attr("src", "http://www.joomlaworks.net/images/demos/galleries/abstract/7.jpg");
 			websocket = null;
+			refreshCarsList();
 		};
 		
 		websocket.onmessage = function(evt){
@@ -73,13 +71,14 @@ function wsConnection(){
 
 function refreshCarsList(){
 	var URL = HTTP_URL + "cars_list";
-	$("select#cars_list").empty();
 	$.ajax({
 		url: URL,
 		success: function(data, textStatus, jqXHR){
+			var html = "";
 			data.forEach(function(d){
-				$("select#cars_list").append("<option value='" + d + "'>" + d + "</option>");
+				html += "<option value='" + d + "'>" + d + "</option>";
 			});
+			$("select#cars_list").html(html);
 		},
 		error: function(jqXHR, status, error){
 			console.log(status + " " + error);
@@ -87,9 +86,58 @@ function refreshCarsList(){
 	});
 }
 
+function touch(evt){
+	document.documentElement.webkitRequestFullscreen();
+	screen.orientation.lock("landscape");
+	if(websocket != null){
+		if(evt.target.id != "ws_connect"){
+			evt.preventDefault();
+			var x = evt.originalEvent.changedTouches[0].pageX;
+			
+			if(evt.type == "touchstart"){ //touch
+				if(x < window.innerWidth / 2) state.down = true;
+				else state.up = true;
+			}
+			else{ //release
+				if(x < window.innerWidth / 2) state.down = false;
+				else state.up = false;
+			}
+			sendState();
+		}
+	}
+}
+
+function orientationHandle(e){
+	//$("#orientout").html(e.alpha + "<br/>" + e.beta + "<br/>" + e.gamma + "<br />" + e.absolute);
+	
+	var delta = 20;
+	var changed = false;
+	
+	if(e.beta < -delta){
+		if(!state.left){
+			state.left = true;
+			changed = true;
+		}
+	}
+	else if(e.beta > delta){
+		if(!state.right){
+			state.right = true;
+			changed = true;
+		}
+	}
+	else if(state.left || state.right){
+		state.left = false;
+		state.right = false;
+		changed = true;
+	}
+	
+	if(changed) sendState();
+}
+
 $(document).ready(function() {
+	window.addEventListener("deviceorientation", orientationHandle, false);
 	$(window).keydown(keypressHandle).keyup(keypressHandle);
+	$(window).on("touchstart touchend", touch);
 	$("button#ws_connect").click(wsConnection);
-	$("button#refresh").click(refreshCarsList);
 	refreshCarsList();
 });

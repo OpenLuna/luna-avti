@@ -58,6 +58,7 @@ function wsConnection(){
 			$("#status").text("Close reason: " + evt.reason);
 			$("#stream").attr("src", "http://www.joomlaworks.net/images/demos/galleries/abstract/7.jpg");
 			websocket = null;
+			refreshCarsList();
 		};
 		
 		websocket.onmessage = function(evt){
@@ -73,13 +74,14 @@ function wsConnection(){
 
 function refreshCarsList(){
 	var URL = HTTP_URL + "cars_list";
-	$("select#cars_list").empty();
 	$.ajax({
 		url: URL,
 		success: function(data, textStatus, jqXHR){
+			var html = "";
 			data.forEach(function(d){
-				$("select#cars_list").append("<option value='" + d + "'>" + d + "</option>");
+				html += "<option value='" + d + "'>" + d + "</option>";
 			});
+			$("select#cars_list").html(html);
 		},
 		error: function(jqXHR, status, error){
 			console.log(status + " " + error);
