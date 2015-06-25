@@ -70,7 +70,7 @@ class WebsocketClient(WebSocketClientProtocol):
 def streaming():
     camera = picamera.PiCamera()
     camera.resolution = (200, 150)
-    camera.framerate = 15
+    camera.framerate = 10
     #camera.color_effects = (128, 128)
     stream = io.BytesIO()
     cnt = 0
@@ -93,7 +93,7 @@ def streaming():
             cnt += 1
             FPS =   ("%.2f" % (cnt / (time.time() - start))) + " FPS"
             #camera.annotate_text = FPS
-            #print FPS, str(stream.tell())
+            print FPS, str(stream.tell())
             stream.seek(0)
             stream.truncate()
     except Exception as e:
