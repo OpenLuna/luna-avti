@@ -34,8 +34,7 @@ class WebSocketClient(WebSocketClientProtocol):
     def onOpen(self):
         print "Websocket connection opened"
         print "Car is ready for driving"
-        control.LED("green", True)
-        control.LED("red", False)
+        factory.setConnected(True)
         self.sendMessage(urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
         self.pingTask.start(float(config["ping interval"]))
     
@@ -76,13 +75,16 @@ class WebSocketFactory(WebSocketClientFactory):
     def clientConnectionLost(self, connector, reason):
         self.disconnected(connector, reason)
     
+    def setConnected(self, c):
+        self.connected = c
+        control.LED("green", c)
+        control.LED("red", not c)
+    
     def disconnected(self, connector, reason):
         if self.connected:
             print "Connection unsuccessful:", reason
             print "reconnecting..."
-            control.LED("green", False)
-            control.LED("red", True)
-            self.connected = False
+            self.setConnected(False)
         connector.connect()
 
 def streaming():
