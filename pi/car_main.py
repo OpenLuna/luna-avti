@@ -26,7 +26,7 @@ def applyCommands(up, down, left, right):
     else: control.steer(control.STEER_STOP)
     print "Got state UP:", up, "DOWN:", down, "LEFT:", left, "RIGHT:", right
 
-class WebsocketClient(WebSocketClientProtocol):
+class WebSocketClient(WebSocketClientProtocol):
     def __init__(self):
         self.pingTask = task.LoopingCall(self.ping)
         self.gotPong = True
@@ -35,6 +35,7 @@ class WebsocketClient(WebSocketClientProtocol):
         print "Websocket connection opened"
         print "Car is ready for driving"
         control.LED("green", True)
+        control.LED("red", False)
         self.sendMessage(urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
         self.pingTask.start(float(config["ping interval"]))
     
@@ -47,11 +48,10 @@ class WebsocketClient(WebSocketClientProtocol):
             print "invalid commands"
         
     def onClose(self, wasClean, code, reason):
-        print "Connection closed with code:", code, "and reason:", reason
         try:
+            print "Connection closed with code:", code, "and reason:", reason
             control.stopMotors()
             self.pingTask.stop()
-            reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
         except Exception as e:
             print e
     
@@ -67,16 +67,34 @@ class WebsocketClient(WebSocketClientProtocol):
     def onPong(self, payload):
         self.gotPong = True
 
+class WebSocketFactory(WebSocketClientFactory):
+    connected = True    
+        
+    def clientConnectionFailed(self, connector, reason):
+        self.disconnected(connector, reason)
+    
+    def clientConnectionLost(self, connector, reason):
+        self.disconnected(connector, reason)
+    
+    def disconnected(self, connector, reason):
+        if self.connected:
+            print "Connection unsuccessful:", reason
+            print "reconnecting..."
+            control.LED("green", False)
+            control.LED("red", True)
+            self.connected = False
+        connector.connect()
+
 def streaming():
     camera = picamera.PiCamera()
-    camera.resolution = (200, 150)
-    camera.framerate = 10
+    camera.resolution = (400, 300)
+    camera.framerate = 60
     #camera.color_effects = (128, 128)
     stream = io.BytesIO()
     cnt = 0
-    print "Streaming started"
+    print "Connecting stream..."
     try:
-        conn = httplib.HTTPConnection(config["server ip"], int(config["stream port"]))
+        conn = httplib.HTTPConnection(config["server ip"], int(config["stream port"]), timeout=3)
         #conn.set_debuglevel(1)
         conn.putrequest("GET", "/streamreg?" + urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
         conn.putheader("Content-Length", "4000000000000")
@@ -84,6 +102,7 @@ def streaming():
         conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) #hack may increase transmission rate
         conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_CORK, 0) #hack may increase transmission rate
         start=time.time()
+        print "Streaming started"
         for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 10):
             #if not (cnt % 1):
             conn.send("--jpgboundary\n")
@@ -93,11 +112,11 @@ def streaming():
             cnt += 1
             FPS =   ("%.2f" % (cnt / (time.time() - start))) + " FPS"
             #camera.annotate_text = FPS
-            print FPS, str(stream.tell())
+            #print FPS, str(stream.tell())
             stream.seek(0)
             stream.truncate()
     except Exception as e:
-        print "Streaming finished", e
+        print "Error streaming: ", e
         camera.close()
         conn.close()
         streaming()
@@ -107,14 +126,18 @@ print "Process nicesness", os.nice(-20)
 
 #initialize car control
 control = cc.Control()
+control.LED("red", True)
 
 #read default config file (car.config) or the one provided as program argument
 config = loadConfig(sys.argv[2]) if len(sys.argv) > 2 else loadConfig()
 printDict("Config:", config)
 
 #connect websocket
-factory = WebSocketClientFactory(debug = False)
-factory.protocol = WebsocketClient
+"""from twisted.python import log
+log.startLogging(sys.stdout)"""
+
+factory = WebSocketFactory(debug = False)
+factory.protocol = WebSocketClient
 reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
 
 runStreaming = True
@@ -124,6 +147,5 @@ if runStreaming:
     streamProcess = Process(target = streaming)
     streamProcess.daemon = True
     streamProcess.start()
-
+    
 reactor.run()
-
