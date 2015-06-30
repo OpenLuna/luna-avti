@@ -20,7 +20,7 @@ var streamApp = Connect();
 streamApp.use("/streamreg", function(req, res, next){
 	query = URL.parse(req.url, true).query;
 	if(query.token == CAR_SECRET){
-		carsSTREAM[query.name] = [];
+		carsSTREAM[query.name] = carsSTREAM[query.name] || [];
 		req.on("data", function(chunk){
 			carsSTREAM[query.name].forEach(function(e){
 				e.write(chunk);
@@ -32,10 +32,10 @@ streamApp.use("/streamreg", function(req, res, next){
 		res.end("wrong token for stream registration");
 	}
 });
-streamApp.use(function(req, res, next){
+streamApp.use(function(req, res, next){ //video stream to client
 	var query = URL.parse(req.url, true).query;
 	res.writeHead(200, {'Content-Type': 'multipart/x-mixed-replace; boundary=--jpgboundary'});
-	if(carsSTREAM[query.name] === undefined) carsSTREAM[query.name] = [];
+	carsSTREAM[query.name] = carsSTREAM[query.name] || [];
 	carsSTREAM[query.name].push(res);
 	
 	req.on("close", function(){
