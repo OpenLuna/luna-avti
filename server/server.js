@@ -13,7 +13,7 @@ app.use("/cars_list", function(req, res, next){
 	res.end(JSON.stringify(Object.keys(carsWS)));
 });
 app.use(ServeStatic(__dirname + "/public"));
-app.listen(8080);
+app.listen(80);
 
 //streamApp is http server that redirects mjpeg streams
 var streamApp = Connect();
