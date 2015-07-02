@@ -88,12 +88,11 @@ class WebSocketFactory(WebSocketClientFactory):
         connector.connect()
 
 def streaming():
+    import camera_specs as cs
+    cameraSpecs = cs.CameraSpecs(desiredFPS = 25)
     camera = picamera.PiCamera()
-    camera.resolution = (400, 300)
-    camera.framerate = 60
-    #camera.color_effects = (128, 128)
+    #camera.color_effects = (128, 128) #grayscale image
     stream = io.BytesIO()
-    cnt = 0
     print "Connecting stream..."
     try:
         conn = httplib.HTTPConnection(config["server ip"], int(config["stream port"]), timeout=3)
@@ -103,20 +102,24 @@ def streaming():
         conn.endheaders()
         conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) #hack may increase transmission rate
         conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_CORK, 0) #hack may increase transmission rate
-        start=time.time()
         print "Streaming started"
-        for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 10):
-            #if not (cnt % 1):
-            conn.send("--jpgboundary\n")
-            conn.send("Content-type: image/jpeg\n")
-            conn.send("Content-length: " + str(stream.tell()) + "\n\n")
-            conn.send(stream.getvalue())
-            cnt += 1
-            FPS =   ("%.2f" % (cnt / (time.time() - start))) + " FPS"
-            #camera.annotate_text = FPS
-            #print FPS, str(stream.tell())
-            stream.seek(0)
-            stream.truncate()
+        while True:
+            print "Camera resolution:", cameraSpecs.resolution
+            print "Camera framerate:", cameraSpecs.framerate
+            camera.resolution = cameraSpecs.resolution
+            camera.framerate = cameraSpecs.framerate
+            for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 10):
+                conn.send("--jpgboundary\n")
+                conn.send("Content-type: image/jpeg\n")
+                conn.send("Content-length: " + str(stream.tell()) + "\n\n")
+                conn.send(stream.getvalue())
+                cameraSpecs.frameSent()
+                print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
+                stream.seek(0)
+                stream.truncate()
+                if cameraSpecs.checkChange():
+                    break
+            
     except Exception as e:
         print "Error streaming: ", e
         camera.close()
