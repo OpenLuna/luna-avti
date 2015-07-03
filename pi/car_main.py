@@ -114,7 +114,7 @@ def streaming():
                 conn.send("Content-length: " + str(stream.tell()) + "\n\n")
                 conn.send(stream.getvalue())
                 cameraSpecs.frameSent()
-                print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
+                #print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
                 stream.seek(0)
                 stream.truncate()
                 if cameraSpecs.checkChange():
