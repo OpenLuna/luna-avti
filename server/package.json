@@ -2,7 +2,7 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "mjpegServer.js",
+  "main": "server.js",
   "scripts": {},
   "author": "Ernest Beličič <ernest.belicic@gmail.com>",
   "dependencies": {

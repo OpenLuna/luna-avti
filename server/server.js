@@ -15,17 +15,20 @@ app.use("/cars_list", function(req, res, next){
 app.use(ServeStatic(__dirname + "/public"));
 app.listen(8080);
 
+var globalReq;
+
 //streamApp is http server that redirects mjpeg streams
 var streamApp = Connect();
 streamApp.use("/streamreg", function(req, res, next){
 	query = URL.parse(req.url, true).query;
 	if(query.token == CAR_SECRET){
-		carsSTREAM[query.name] = carsSTREAM[query.name] || [];
-		req.on("data", function(chunk){
-			carsSTREAM[query.name].forEach(function(e){
-				e.write(chunk);
-			});
-		});
+		console.log("Video stream from " + query.name + " registered");
+		carsVideo[query.name] = req;
+		
+		/*req.on("close", function(){
+			console.log("Video stream from " + query.name + " went offline");
+			delete carsVideo[query.name];
+		});*/
 	}
 	else{
 		res.writeHead(404);
@@ -35,19 +38,27 @@ streamApp.use("/streamreg", function(req, res, next){
 streamApp.use(function(req, res, next){ //video stream to client
 	var query = URL.parse(req.url, true).query;
 	res.writeHead(200, {'Content-Type': 'multipart/x-mixed-replace; boundary=--jpgboundary'});
-	carsSTREAM[query.name] = carsSTREAM[query.name] || [];
-	carsSTREAM[query.name].push(res);
 	
-	req.on("close", function(){
-		var i = carsSTREAM[query.name].indexOf(res);
-		carsSTREAM[query.name].splice(i, 1);
-	});
+	if(carsVideo[query.name] !== undefined){
+		carsVideo[query.name].pipe(res);
+		console.log("Client connected to video stream of " + query.name);
+		
+		req.on("close", function(){
+			console.log("Client disconnected from video stream of " + query.name);
+			if(carsVideo[query.name] !== undefined)
+				carsVideo[query.name].unpipe(res);
+		});
+	}
+	else{
+		res.writeHead(404);
+		res.end("video stream is not online");
+	}
 });
 streamApp.listen(4114);
 
 var CAR_SECRET = 133780085; //car token (shared secret)
 var carsWS = {}; //websocket connections of cars
-var carsSTREAM = {}; //stream redirections for cars
+var carsVideo = {}; //stream redirections for cars
 
 //wss is websocket server
 var wss = new WebSocketServer({port: 4113});
