@@ -13,7 +13,7 @@ from config_parser import loadConfig, printDict
 from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory
 from twisted.internet import reactor
 from twisted.internet import task
-from multiprocessing import Process
+from multiprocessing import Process, Pipe
 
 def applyCommands(up, down, left, right):
     #driving
@@ -82,49 +82,59 @@ class WebSocketFactory(WebSocketClientFactory):
     
     def disconnected(self, connector, reason):
         if self.connected:
-            print "Connection unsuccessful:", reason
+            print "Websocket connection unsuccessful:", reason
             print "reconnecting..."
             self.setConnected(False)
         connector.connect()
 
 def streaming():
     import camera_specs as cs
-    cameraSpecs = cs.CameraSpecs(desiredFPS = 25)
+    cameraSpecs = cs.CameraSpecs(400, 200, 3, desiredFPS = 25)
     camera = picamera.PiCamera()
     #camera.color_effects = (128, 128) #grayscale image
     stream = io.BytesIO()
     print "Connecting stream..."
-    try:
-        conn = httplib.HTTPConnection(config["server ip"], int(config["stream port"]), timeout=3)
-        #conn.set_debuglevel(1)
-        conn.putrequest("GET", "/streamreg?" + urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
-        conn.putheader("Content-Length", "4000000000000")
-        conn.endheaders()
-        conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) #hack may increase transmission rate
-        conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_CORK, 0) #hack may increase transmission rate
-        print "Streaming started"
-        while True:
-            print "Camera resolution:", cameraSpecs.resolution
-            print "Camera framerate:", cameraSpecs.framerate
-            camera.resolution = cameraSpecs.resolution
-            camera.framerate = cameraSpecs.framerate
-            for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 10):
-                conn.send("--jpgboundary\n")
-                conn.send("Content-type: image/jpeg\n")
-                conn.send("Content-length: " + str(stream.tell()) + "\n\n")
-                conn.send(stream.getvalue())
-                cameraSpecs.frameSent()
-                #print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
-                stream.seek(0)
-                stream.truncate()
-                if cameraSpecs.checkChange():
-                    break
-            
-    except Exception as e:
-        print "Error streaming: ", e
-        camera.close()
-        conn.close()
-        streaming()
+    while True: #connect to server loop
+        try:
+            conn = httplib.HTTPConnection(config["server ip"], int(config["stream port"]), timeout = 1)
+            #conn.set_debuglevel(1)
+            conn.putrequest("GET", "/streamreg?" + urllib.urlencode({"token": config["secret key"], "name": config["name"]}))
+            conn.putheader("Content-Length", "4000000000000")
+            conn.endheaders()
+            conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) #hack may increase transmission rate
+            conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_CORK, 0) #hack may increase transmission rate
+            print "Streaming started"
+            while True: #resolution adjustment loop
+                print "Camera resolution:", cameraSpecs.resolution
+                print "Camera framerate:", cameraSpecs.framerate
+                camera.resolution = cameraSpecs.resolution
+                camera.framerate = cameraSpecs.framerate
+                for image in camera.capture_continuous(stream, format='jpeg', use_video_port=True, quality = 10):
+                    try:
+                        conn.send("--jpgboundary\n")
+                        conn.send("Content-type: image/jpeg\n")
+                        conn.send("Content-length: " + str(stream.tell()) + "\n\n")
+                        conn.send(stream.getvalue())
+                    except socket.timeout: #sending image timeout
+                        continue
+                    cameraSpecs.frameSent()
+                    print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
+                    stream.seek(0)
+                    stream.truncate()
+                    if cameraSpecs.checkChange():
+                        break
+        except KeyboardInterrupt:
+            camera.close()
+            conn.close()
+            exit()
+        except Exception as e:
+            if str(e) == "timed out": #initial connection timed out
+                conn.close()
+                continue
+            print "Error streaming: " + str(e)
+            camera.close()
+            conn.close()
+            streaming()
 
 #****MAIN****#
 print "Process nicesness", os.nice(-20)
@@ -141,6 +151,7 @@ printDict("Config:", config)
 """from twisted.python import log
 log.startLogging(sys.stdout)"""
 
+print "Connecting websocket..."
 factory = WebSocketFactory(debug = False)
 factory.protocol = WebSocketClient
 reactor.connectTCP(config["server ip"], int(config["ws port"]), factory)
@@ -150,7 +161,8 @@ if len(sys.argv) > 1:
     runStreaming = sys.argv[1].lower() == "true"
 if runStreaming:
     streamProcess = Process(target = streaming)
-    streamProcess.daemon = True
     streamProcess.start()
     
 reactor.run()
+if runStreaming:
+    streamProcess.join()

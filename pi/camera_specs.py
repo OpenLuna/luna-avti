@@ -11,6 +11,7 @@ class CameraSpecs:
         self.resolutionIndex = nSteps - 1
         
         self.resolution = self.getResolution(self.resolutionIndex)
+        #self.resolution = self.getResolution(0)
         self.framerate = desiredFPS
         self.frameTimes = []
         self.FPS = 0
@@ -34,7 +35,10 @@ class CameraSpecs:
     def getResolution(self, i):
         if i < 0 or i >= self.nSteps:
             raise Exception("invalid index for resolution")
-        w = (self.maxResolution - self.minResolution) * i / float(self.nSteps - 1) + self.minResolution
+        if self.nSteps == 1:
+            w = self.maxResolution
+        else:
+            w = (self.maxResolution - self.minResolution) * i / float(self.nSteps - 1) + self.minResolution
         h = w / self.ratio
         return (int(w), int(h))
     
