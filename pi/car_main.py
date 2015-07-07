@@ -89,7 +89,7 @@ class WebSocketFactory(WebSocketClientFactory):
 
 def streaming():
     import camera_specs as cs
-    cameraSpecs = cs.CameraSpecs(400, 200, 3, desiredFPS = 25)
+    cameraSpecs = cs.CameraSpecs(int(config["maxres"]), int(config["minres"]), int(config["numsteps"]), int(config["desiredfps"]))
     camera = picamera.PiCamera()
     #camera.color_effects = (128, 128) #grayscale image
     stream = io.BytesIO()
@@ -118,7 +118,7 @@ def streaming():
                     except socket.timeout: #sending image timeout
                         continue
                     cameraSpecs.frameSent()
-                    print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
+                    #print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
                     stream.seek(0)
                     stream.truncate()
                     if cameraSpecs.checkChange():

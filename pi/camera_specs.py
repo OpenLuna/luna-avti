@@ -1,7 +1,7 @@
 import time
 
 class CameraSpecs:
-    def __init__(self, maxRes = 1000, minRes = 200, nSteps = 5, ratio = (4.0 / 3.0), desiredFPS = 30):
+    def __init__(self, maxRes, minRes, nSteps, desiredFPS, ratio = (4.0 / 3.0)):
         self.maxResolution = maxRes
         self.minResolution = minRes
         self.nSteps = nSteps
