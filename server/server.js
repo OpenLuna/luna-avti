@@ -4,6 +4,7 @@ var Logging = require("morgan");
 var WebSocketServer = require('ws').Server;
 var QueryString = require("querystring");
 var URL = require("url");
+var http = require("http");
 
 //app is http server that serves static files in /public folder
 var app = Connect();
@@ -15,14 +16,16 @@ app.use("/cars_list", function(req, res, next){
 app.use(ServeStatic(__dirname + "/public"));
 app.listen(8080);
 
-var globalReq;
+var CAR_SECRET = 133780085; //car token (shared secret)
+var carsWS = {}; //websocket connections of cars
+var carsVideo = {}; //stream redirections for cars
 
 //streamApp is http server that redirects mjpeg streams
 var streamApp = Connect();
 streamApp.use("/streamreg", function(req, res, next){
 	query = URL.parse(req.url, true).query;
 	if(query.token == CAR_SECRET){
-		console.log("Video stream from " + query.name + " registered");
+		console.log("[ST] Video stream from >>" + query.name + "<< registered");
 		carsVideo[query.name] = req;
 		
 		/*req.on("close", function(){
@@ -32,7 +35,7 @@ streamApp.use("/streamreg", function(req, res, next){
 	}
 	else{
 		res.writeHead(404);
-		res.end("wrong token for stream registration");
+		res.end("wrong token for video stream registration");
 	}
 });
 streamApp.use(function(req, res, next){ //video stream to client
@@ -40,11 +43,11 @@ streamApp.use(function(req, res, next){ //video stream to client
 	res.writeHead(200, {'Content-Type': 'multipart/x-mixed-replace; boundary=--jpgboundary'});
 	
 	if(carsVideo[query.name] !== undefined){
+		console.log("[ST] Client connected to video stream of >>" + query.name + "<<");
 		carsVideo[query.name].pipe(res);
-		console.log("Client connected to video stream of " + query.name);
 		
 		req.on("close", function(){
-			console.log("Client disconnected from video stream of " + query.name);
+			console.log("[ST] Client disconnected from video stream of >>" + query.name + "<<");
 			if(carsVideo[query.name] !== undefined)
 				carsVideo[query.name].unpipe(res);
 		});
@@ -54,11 +57,8 @@ streamApp.use(function(req, res, next){ //video stream to client
 		res.end("video stream is not online");
 	}
 });
-streamApp.listen(4114);
-
-var CAR_SECRET = 133780085; //car token (shared secret)
-var carsWS = {}; //websocket connections of cars
-var carsVideo = {}; //stream redirections for cars
+var server = http.createServer(streamApp).listen(4114);
+server.timeout = 0;
 
 //wss is websocket server
 var wss = new WebSocketServer({port: 4113});
@@ -72,20 +72,20 @@ wss.on("connection", function(ws){
 				
 				//car token
 				if(token == CAR_SECRET){ 
-					console.log("Car token accepted: " + query.name);
+					console.log("[WS] Car >>" + query.name + "<< advertised");
 					ws.type = "car";
 					ws.name = query.name;
 					carsWS[query.name] = ws;
 				}
 				else if(token > 0 && token < 1000){ //client token validation
-					console.log("Client token " + token + " accepted. Want connection with " + query.name);
 					ws.type = "client";
 					ws.token = token;
 					if(carsWS[query.name] === undefined)
 						throw "car offline";
 					else if(carsWS[query.name].clientWS !== undefined)
-						throw "car already connected with some client";
+						throw "car busy";
 					else{ //accept connection
+						console.log("[WS] Client (" + token + ") connected with car >>" + query.name + "<<");
 						ws.carWS = carsWS[query.name]; //connect client websocket with car websocket
 						ws.carWS.clientWS = ws; //connect car websocket with client websocket
 					}
@@ -99,19 +99,25 @@ wss.on("connection", function(ws){
 			}
 		}
 		else{ //client sends message. redirect to car
-			ws.carWS.send(message);
+			try{
+				ws.carWS.send(message);
+			}
+			catch(e){
+				console.log("[WS] " + e);
+				ws.close();
+			}
 		}
     });
 	
 	ws.on("close", function(code, message){
 		if(ws.type == "car"){
-			console.log("Car \"" + ws.name + "\" DISCONNECTED with code " + code + " and reason \"" + message + "\"");
+			console.log("[WS] Car >>" + ws.name + "<< disconnected (" + code + ")");
 		}
 		else if(ws.type == "client"){
-			console.log("Client with token " + ws.token + " DISCONNECTED with code " + code + " and reason \"" + message + "\"");
+			console.log("[WS] Client (" + ws.token + ") disconnected (" + code + ")" + ((message)? ": " + message : ""));
 		}
 		
-		if(ws.type == "car"){
+		if(ws.type == "car" && ws == carsWS[ws.name]){
 			delete carsWS[ws.name];
 			if(ws.clientWS !== undefined){ //closing connection with car that is connected with client
 				ws.clientWS.close(1000, "car went offline"); //close client and send reason
@@ -125,7 +131,7 @@ wss.on("connection", function(ws){
 	});
 	
 	ws.on("error", function(error){
-		console.log("ERROR: " + error);
+		console.log("[WS] ERROR: " + error);
 	});
 });
 

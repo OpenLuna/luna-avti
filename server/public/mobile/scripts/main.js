@@ -28,9 +28,9 @@ function keypressHandle(e){
 }
 
 function sendState(){
-	//console.log(state);
 	if(websocket != null){
 		var cmd = "up=" + (state.up ? ON:OFF) + "&down=" + (state.down ? ON:OFF) + "&left=" + (state.left ? ON:OFF) + "&right=" + (state.right ? ON:OFF);
+		console.log(cmd);
 		websocket.send(cmd);
 	}
 }
@@ -134,8 +134,37 @@ function orientationHandle(e){
 	if(changed) sendState();
 }
 
+function motionHandle(e){
+	//console.log(e.accelerationIncludingGravity.x + ", " + e.accelerationIncludingGravity.y);
+	
+	var delta = 2;
+	var changed = false;
+	var orient = e.accelerationIncludingGravity.y;
+	
+	if(orient < -delta){
+		if(!state.left){
+			state.left = true;
+			changed = true;
+		}
+	}
+	else if(orient > delta){
+		if(!state.right){
+			state.right = true;
+			changed = true;
+		}
+	}
+	else if(state.left || state.right){
+		state.left = false;
+		state.right = false;
+		changed = true;
+	}
+	
+	if(changed) sendState();
+}
+
 $(document).ready(function() {
-	window.addEventListener("deviceorientation", orientationHandle, false);
+	//window.addEventListener("deviceorientation", orientationHandle, false);
+	window.addEventListener("devicemotion", motionHandle, false);
 	$(window).keydown(keypressHandle).keyup(keypressHandle);
 	$(window).on("touchstart touchend", touch);
 	$("button#ws_connect").click(wsConnection);
