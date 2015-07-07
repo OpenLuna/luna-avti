@@ -45,6 +45,6 @@ class CameraSpecs:
     def frameSent(self):
         now = time.time()
         self.frameTimes.append(now)
-        while now - self.frameTimes[0] > 2.0:
+        while now - self.frameTimes[0] > 10.0:
             self.frameTimes.pop(0)
         self.FPS = len(self.frameTimes) / (now - self.frameTimes[0] + 1e-10)
