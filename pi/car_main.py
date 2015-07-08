@@ -116,7 +116,7 @@ def streaming():
                     except socket.timeout: #sending image timeout
                         continue
                     cameraSpecs.frameSent()
-                    print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
+                    #print "%.2f" % cameraSpecs.FPS, "FPS,", "%.2f" % (stream.tell() / 1024.0), "KB"
                     stream.seek(0)
                     stream.truncate()
                     if cameraSpecs.checkChange():
