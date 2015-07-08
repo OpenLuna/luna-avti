@@ -14,7 +14,7 @@ app.use("/cars_list", function(req, res, next){
 	res.end(JSON.stringify(Object.keys(carsWS)));
 });
 app.use(ServeStatic(__dirname + "/public"));
-app.listen(80);
+app.listen(8080);
 
 var CAR_SECRET = 133780085; //car token (shared secret)
 var carsWS = {}; //websocket connections of cars
