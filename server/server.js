@@ -65,6 +65,42 @@ function checkSecret(secret, callback) {
     req.end();
 }
 
+function updateWaitList(callback) {
+    var options = {
+        'hostname': 'pelji.se',
+        'port': '80',
+        'path': '/updateWaitList',
+        'method': 'GET',
+        'headers': {
+            'Content-Type': 'application/json',
+        }
+    }
+
+    var req = http.request(options, function (res) {
+        res.setEncoding('utf8');
+
+        var rdata = '';
+
+        res.on('data', function (chunk) {
+
+            rdata = rdata + chunk;
+
+        });
+
+        res.on('end', function () {
+
+            return callback(rdata);
+
+        })
+    });
+
+    req.on('error', function (e) {
+        console.log('problem with updateWaitLis request: ' + e.message);
+    });
+
+    req.end();
+}
+
 //streamApp is http server that redirects mjpeg streams
 //var streamApp = Connect();
 //streamApp.use("/streamreg", function (req, res, next) {
@@ -167,6 +203,13 @@ wss.on("connection", function (ws) {
                         console.log("[WS] Client (" + token + ") connected with car >>" + query.name + "<<");
                         ws.carWS = carsWS[query.name]; //connect client websocket with car websocket
                         ws.carWS.clientWS = ws; //connect car websocket with client websocket
+
+                        setInterval(function () {
+                            updateWaitList(function (data, name) {
+                                console.log("update wait list")
+                            });
+                        }, 5000);
+                        
                     }
                 } else {
                     throw "invalid token";
