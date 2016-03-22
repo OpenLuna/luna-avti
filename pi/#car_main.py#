@@ -1,4 +1,4 @@
-import car_control as cc
+B0;95;cimport car_control as cc
 import picamera
 import urlparse
 import socket
@@ -28,7 +28,6 @@ def applyCommands(up, down, left, right):
 
 class WebSocketClient(WebSocketClientProtocol):
     def __init__(self):
-        WebSocketClientProtocol.__init__(self)
         self.pingTask = task.LoopingCall(self.ping)
         self.gotPong = True
     
@@ -155,7 +154,7 @@ factory = WebSocketFactory(debug = False)
 factory.protocol = WebSocketClient
 reactor.connectTCP(config["server ip"], int(config["ws port"]), factory, timeout = 1)
 
-runStreaming = True
+runStreaming = False
 if len(sys.argv) > 1:
     runStreaming = sys.argv[1].lower() == "true"
 if runStreaming:
